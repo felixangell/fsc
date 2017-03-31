@@ -27,5 +27,10 @@ int main(int argc, char** argv) {
 			};
 		}
 	}	
+
+	for (int i = 0; i < num_units; i++) {
+		
+	}
+
 	return 0;
 }
