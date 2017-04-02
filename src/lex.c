@@ -4,6 +4,7 @@
 #include <ctype.h>
 #include <string.h>
 
+#include "str.h"
 #include "array_list.h"
 #include "lex.h"
 #include "comp_unit.h"
@@ -123,22 +124,12 @@ consume_amount(struct lexer* lex, int offs) {
 	return tok;
 }
 
-bool 
-has_prefix(const char* str, const char* what) {
-	for (size_t i = 0; i < strlen(what); i++) {
-		if (str[i] != what[i]) {
-			return false;
-		}
-	}
-	return true;
-}
-
 static inline int 
 get_symbol_size(struct lexer* lex) {
 	static char* keywords[] = {
-	"<<=", ">>=", "...",
-	"<<", ">>", "<=", ">=", "==", "!=", "&&", "||",
-	"*=", "/=", "%%=", "+=", "-=", "&=", "^=", "|="
+		"<<=", ">>=", "...",
+		"<<", ">>", "<=", ">=", "==", "!=", "&&", "||",
+		"*=", "/=", "%%=", "+=", "-=", "&=", "^=", "|="
 	};
 
 	char* three = &lex->unit->contents[lex->pos];

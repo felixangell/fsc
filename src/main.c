@@ -3,22 +3,13 @@
 #include <string.h>
 #include <stdbool.h>
 
+#include "str.h"
 #include "array_list.h"
 #include "lex.h"
 #include "parse.h"
 #include "comp_unit.h"
 
 #define JAVAJAVA_FILE_EXT ".yava"
-
-static bool 
-has_suffix(char* str, char* suffix) {
-	size_t str_len = strlen(str);
-	size_t suffix_len = strlen(suffix);
-	if (suffix_len > str_len) {
-		return false;
-	}
-	return !strcmp(&str[str_len - suffix_len], suffix);
-}
 
 static void 
 read_comp_unit(struct compilation_unit* unit) {
@@ -73,8 +64,8 @@ main(int argc, char** argv) {
 		parse(tokenize(&lex_inst, current_unit));
 	}
 
+	// cleanup stuff
 	{
-		// cleanup stuff
 		for (int i = 0; i < num_units; i++) {
 			struct compilation_unit* unit = units[i];
 			free(unit->contents);
