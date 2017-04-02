@@ -1,0 +1,44 @@
+# depslib dependency file v1.0
+1491161511 source:d:\_programming projects\c\console\languages\javajava\src\lex.c
+	<stdio.h>
+	<stdlib.h>
+	<stdbool.h>
+	<ctype.h>
+	<string.h>
+	"array_list.h"
+	"lex.h"
+	"comp_unit.h"
+
+1491160687 d:\_programming projects\c\console\languages\javajava\util\array_list.h
+	"type.h"
+
+1491160687 d:\_programming projects\c\console\languages\javajava\util\type.h
+	<stdint.h>
+	<stdbool.h>
+
+1491161511 d:\_programming projects\c\console\languages\javajava\src\lex.h
+	"type.h"
+
+1491160687 d:\_programming projects\c\console\languages\javajava\src\comp_unit.h
+	"../util/type.h"
+
+1491161511 source:d:\_programming projects\c\console\languages\javajava\src\main.c
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	<stdbool.h>
+	"array_list.h"
+	"lex.h"
+	"parse.h"
+	"comp_unit.h"
+
+1491161511 d:\_programming projects\c\console\languages\javajava\src\parse.h
+	"type.h"
+
+1491160687 source:d:\_programming projects\c\console\languages\javajava\src\parse.c
+	"parse.h"
+
+1491160687 source:d:\_programming projects\c\console\languages\javajava\util\array_list.c
+	<stdlib.h>
+	"array_list.h"
+
