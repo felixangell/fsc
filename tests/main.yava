@@ -1,4 +1,18 @@
-oh thats why its not working
-duh im an idiot!
-123.3123 2342134 444444 !! lol nice one
-you slicc memester
+class person {
+	string name;
+	int age;
+
+	this() {
+
+	}
+
+	~this() {
+
+	}
+}
+
+int main() {
+	person p;
+	p.age = 53;
+	p.name = "Felix";
+}

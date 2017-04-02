@@ -1,7 +1,9 @@
+#include "jjvm.h"
+#include "instr.h"
 #include "array_list.h"
 #include "virtual_thread.h"
 
-static virtual_thread* MAIN_THREAD = NULL;
+static struct virtual_thread* MAIN_THREAD;
 
 enum {
 	// pushes a new stack frame
@@ -54,6 +56,7 @@ execute_instructions(struct jjvm_inst* instance, struct array_list* instructions
 	while (instance->current->program_counter < instructions->capacity) {
 		struct jjvm_instruction* instr = instructions->items[instance->current->program_counter++];
 		switch (instr->id) {
-		}		
+			
+		}
 	}
 }

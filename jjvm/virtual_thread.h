@@ -9,6 +9,8 @@
 #define STACK_SIZE (1 * MEGABYTE)
 #define DATASEGMENT_SIZE (1 * MEGABYTE)
 
+struct stack_frame;
+
 struct virtual_thread {
 	unsigned int stack_ptr;
 	uint8_t globals[DATASEGMENT_SIZE];

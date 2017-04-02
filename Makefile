@@ -1,2 +1,2 @@
 all:
-	clang -Iutil src/*.c util/*.c -Wall -Wextra -std=gnu99
+	clang -Iutil jjvm/*.c src/*.c util/*.c -Wall -Wextra -std=gnu99

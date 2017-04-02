@@ -1,12 +1,13 @@
 #include <stdlib.h>
 
+#include "stack_frame.h"
 #include "virtual_thread.h"
 
 struct stack_frame* 
 push_frame(struct virtual_thread* thread) {
 	struct stack_frame* new_frame = malloc(sizeof(*new_frame));
 	new_frame->parent = thread->current_frame;
-	new_frame->current_frame = new_frame;
+	thread->current_frame = new_frame;
 	return new_frame;
 }
 

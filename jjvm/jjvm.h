@@ -11,6 +11,6 @@ struct jjvm_inst {
 };
 
 void 
-execute_instructions(struct jjvm_inst* instance);
+execute_instructions(struct jjvm_inst* instance, struct array_list* instructions);
 
 #endif
