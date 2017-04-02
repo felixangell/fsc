@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdbool.h>
 
+#include "lex.h"
 #include "comp_unit.h"
 
 #define JAVAJAVA_FILE_EXT ".yava"
@@ -29,7 +30,10 @@ int main(int argc, char** argv) {
 	}	
 
 	for (int i = 0; i < num_units; i++) {
-				
+		struct compilation_unit* current_unit = units[i];
+
+		struct lexer lex_inst = {0};
+		tokenize(&lex_inst, current_unit->contents);
 	}
 
 	return 0;

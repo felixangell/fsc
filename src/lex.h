@@ -1,7 +1,7 @@
 #ifndef LEX_H
 #define LEX_H
 
-#include "type.h"
+#include "../util/type.h"
 
 enum token_type {
 	T_IDENTIFIER,
@@ -23,6 +23,6 @@ struct lexer {
 	u64 position;
 };
 
-struct array_list* tokenize(char* input);
+struct array_list* tokenize(struct lexer* lex, char* input);
 
 #endif

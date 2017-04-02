@@ -1,3 +1,5 @@
+#include <stdlib.h>
+
 #include "array_list.h"
 
 struct array_list* array_list_make(u64 capacity) {
@@ -8,7 +10,7 @@ struct array_list* array_list_make(u64 capacity) {
 	return list;
 }
 
-void array_list_push(struct array_list* list, array_list_item item) {
+void array_list_push(struct array_list* list, void* item) {
 	if (list->index == list->capacity) {
 		list->capacity *= 2;
 		list->items = realloc(list->items, sizeof(*list->items) * list->capacity);

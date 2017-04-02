@@ -2,7 +2,8 @@
 #define COMP_UNIT_H
 
 struct compilation_unit {
-	char* path;
+	const char* path;
+	char* contents;
 };
 
 #endif
