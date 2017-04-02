@@ -70,12 +70,7 @@ main(int argc, char** argv) {
 		read_comp_unit(current_unit);
 
 		struct lexer lex_inst = {0};
-		struct array_list* tokens = tokenize(&lex_inst, current_unit);
-		for (int i = 0; i < tokens->length; i++) {
-
-		}
-
-		parse(tokens);
+		parse(tokenize(&lex_inst, current_unit));
 	}
 
 	{
