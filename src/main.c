@@ -3,7 +3,9 @@
 #include <string.h>
 #include <stdbool.h>
 
+#include "array_list.h"
 #include "lex.h"
+#include "parse.h"
 #include "comp_unit.h"
 
 #define JAVAJAVA_FILE_EXT ".yava"
@@ -53,7 +55,9 @@ main(int argc, char** argv) {
 				.path = argv[i],
 			};
 		}
-	}	
+	}
+
+	// first we run lex/parse on all files
 
 	printf("Lexical Analysis on %d compilation unit(s)\n", num_units);
 	for (int i = 0; i < num_units; i++) {
@@ -66,7 +70,12 @@ main(int argc, char** argv) {
 		read_comp_unit(current_unit);
 
 		struct lexer lex_inst = {0};
-		tokenize(&lex_inst, current_unit->contents);
+		struct array_list* tokens = tokenize(&lex_inst, current_unit);
+		for (int i = 0; i < tokens->length; i++) {
+
+		}
+
+		parse(tokens);
 	}
 
 	{

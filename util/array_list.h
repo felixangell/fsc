@@ -5,7 +5,7 @@
 
 struct array_list {
 	void** items;
-	u64 index, capacity;
+	u64 length, capacity;
 };
 
 struct array_list* array_list_make(u64 capacity);
