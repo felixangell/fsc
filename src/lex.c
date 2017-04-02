@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <ctype.h>
 
 #include "../util/array_list.h"
 #include "lex.h"
@@ -9,15 +10,29 @@ next(struct lexer* lex) {
 	return lex->input[lex->position];
 }
 
+static inline void
+consume(struct lexer* lex) {
+	printf("consumed '%c'\n", lex->input[lex->position]);
+	lex->position++;
+}
+
 static void 
 tokenize_identifier(struct lexer* lex) {
 	// an identifier is something like
-	// letter ( { letter | digit | '_' } )
+	// { letter } ( { letter | digit | '_' } )
 	// it must start with a letter, but can be followed
 	// by a digit, another letter, or an underscore.
-
 	// 9oo, _foo, are some examples of non-identifiers
-			
+
+	// letter part
+	while (isalpha(next(lex))) {
+		consume(lex);
+	}
+
+	// letters, digits, underscores.
+	while (isdigit(next(lex)) || isalpha(next(lex)) || next(lex) == '_') {
+		consume(lex);
+	}
 }
 
 // if this fails it will either return an empty
@@ -37,11 +52,15 @@ tokenize(struct lexer* lex, char* input) {
 	// rather than doing strlen which is O(n)!
 	size_t input_len = strlen(input);
 	while (lex->position < input_len) {
-		char current = input[lex->position];
-
 		u64 initial_pos = lex->position;
 
-		switch (current) {
+		// skip the junk stuff, spaces, etc.
+		// between tokens
+		while (next(lex) >= ' ') {
+			consume(lex);
+		}
+
+		switch (next(lex)) {
 		case 'a' ... 'z':
 		case 'A' ... 'Z':
 			tokenize_identifier(lex);
@@ -55,14 +74,17 @@ tokenize(struct lexer* lex, char* input) {
 		case ']': case '<': case '>': case '~': case '=':
 		case '\\': case '?': case ';': case ':': case '#':
 			
-			break;
+			break;	
+		}
 
 		// we've finished tokenizing here
 		// so we'll cut out the lexeme from the source file
-		char lexeme[lex->position - initial_pos];
-		memmove(&lexeme, &input[initial_pos], lex->position - initial_pos);
-		printf("lexeme is '%s'\n", lexeme);
-		}
+		
+		int lexeme_len = lex->position - initial_pos;
+		char lexeme[lexeme_len];
+		memcpy(&lexeme, &input[initial_pos], lexeme_len);
+		printf("%.*s\n", lexeme_len, lexeme);
+		exit(1);
 	}
 
 	return list;

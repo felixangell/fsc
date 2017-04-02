@@ -18,29 +18,28 @@ has_suffix(char* str, char* suffix) {
 	return !strcmp(&str[str_len - suffix_len], suffix);
 }
 
-static char* 
-read_file(const char* path) {
-	FILE* file = fopen(path, "r");
+static void 
+read_comp_unit(struct compilation_unit* unit) {
+	FILE* file = fopen(unit->path, "r");
 	if (!file) {
-		fprintf(stderr, "failed to read file '%s'\n", path);
-		return NULL;
+		fprintf(stderr, "failed to read file '%s'\n", unit->path);
+		return;
 	}
 
 	fseek(file, 0, SEEK_END);
-	u64 file_length = ftell(file);
+	unit->length = ftell(file);
 	rewind(file);
 
-	printf(" - file '%s' is %zd bytes\n", path, file_length);
+	printf(" - file '%s' is %zd bytes\n", unit->path, unit->length);
 
-	char* contents = malloc(file_length + 1);
-	if (!contents) {
-		fprintf(stderr, "failed to allocate memory for file '%s'\n", path);
-		return NULL;
+	unit->contents = malloc(unit->length + 1);
+	if (!unit->contents) {
+		fprintf(stderr, "failed to allocate memory for file '%s'\n", unit->path);
+		return;
 	}
 
-	fread(contents, sizeof(*contents), file_length, file);
-	contents[file_length] = '\0';
-	return contents;
+	fread(unit->contents, sizeof(*unit->contents), unit->length, file);
+	unit->contents[unit->length] = '\0';
 }
 
 int 
@@ -64,10 +63,18 @@ main(int argc, char** argv) {
 		// this is because we dont want to load all the files 
 		// before we do anything, and if the lexer fails we wont
 		// have loads of memory allocated and it can just exit.
-		current_unit->contents = read_file(current_unit->path);
+		read_comp_unit(current_unit);
 
 		struct lexer lex_inst = {0};
 		tokenize(&lex_inst, current_unit->contents);
+	}
+
+	{
+		// cleanup stuff
+		for (int i = 0; i < num_units; i++) {
+			struct compilation_unit* unit = units[i];
+			free(unit->contents);
+		}
 	}
 
 	return 0;
