@@ -16,7 +16,10 @@ struct virtual_thread {
 	unsigned int program_counter;
 };
 
-struct stack_frame* push_frame(struct virtual_thread* parent_thread);
-struct stack_frame* pop_frame(struct virtual_thread* parent_thread);
+struct stack_frame* 
+push_frame(struct virtual_thread* parent_thread);
+
+struct stack_frame* 
+pop_frame(struct virtual_thread* parent_thread);
 
 #endif

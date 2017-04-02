@@ -10,6 +10,7 @@ struct jjvm_inst {
 	struct virtual_thread* current;
 };
 
-void execute_instructions(struct jjvm_inst* instance);
+void 
+execute_instructions(struct jjvm_inst* instance);
 
 #endif

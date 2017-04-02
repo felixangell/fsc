@@ -49,7 +49,8 @@ enum {
 	CMPL,
 };
 
-void execute_instructions(struct jjvm_inst* instance, struct array_list* instructions) {
+void 
+execute_instructions(struct jjvm_inst* instance, struct array_list* instructions) {
 	while (instance->current->program_counter < instructions->capacity) {
 		struct jjvm_instruction* instr = instructions->items[instance->current->program_counter++];
 		switch (instr->id) {

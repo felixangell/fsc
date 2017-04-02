@@ -21,8 +21,10 @@ struct array_list;
 
 struct lexer {
 	u64 position;
+	const char* input;
 };
 
-struct array_list* tokenize(struct lexer* lex, char* input);
+struct array_list* 
+tokenize(struct lexer* lex, char* input);
 
 #endif

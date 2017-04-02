@@ -1,2 +1,2 @@
 all:
-	clang src/*.c util/*.c -Wall -Wextra -std=c99
+	clang src/*.c util/*.c -Wall -Wextra -std=gnu99
