@@ -22,3 +22,6 @@ to install you just need make and a compiler, i'm using clang
 
 Pass a file in as an argument to "compile it"
 as of writing this the compiler just lexes things
+
+## siphash
+the hashtable implementation uses SipHash https://github.com/veorq/SipHash
