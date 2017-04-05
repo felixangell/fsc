@@ -1,6 +1,8 @@
 #ifndef HASHTABLE_H
 #define HASHTABLE_H
 
+#include "type.h"
+
 struct hashtable_entry {
 	char* key;
 	void* value;
