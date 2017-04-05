@@ -6,7 +6,7 @@
 struct ast_node {
 	union {
 		struct class_node {
-
+			
 		};
 		struct function_node {
 

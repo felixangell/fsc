@@ -6,9 +6,13 @@ this is the logo the code can come later
 
 just a stupid project to ease me back in2 programming
 
+## goals
+i want it to be easy to build and execute
+the code should compile fast
+
+
 ## notes
 its written in c
-i want it to be easy to build and execute
 the virtual machine is called "jjvm" and is not really documented
 jjvm steals a lot from the jvm's architecture
 the code is pretty messy

@@ -1,18 +1,1 @@
-class person {
-	string name;
-	int age;
-
-	this() {
-		
-	}
-
-	~this() {
-
-	}
-}
-
-int main() {
-	person p;
-	p.age = 53;
-	p.name = "Felix";
-}
+class person {};

@@ -5,6 +5,7 @@
 #include <string.h>
 
 #include "str.h"
+#include "token.h"
 #include "array_list.h"
 #include "lex.h"
 #include "comp_unit.h"
@@ -13,7 +14,7 @@
 
 bool 
 cmp_lexeme(struct token* tok, const char* val) {
-	for (uint64_t i = 0; i < tok->length; i++) {
+	for (u64 i = 0; i < tok->length; i++) {
 		if (tok->lexeme[i] != val[i]) {
 			return false;
 		}
