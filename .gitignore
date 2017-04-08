@@ -1,0 +1,10 @@
+*.layout
+*.depend
+*.cbp
+bin/
+obj/
+
+*.dll
+*.7z
+*.zip
+*.txt
