@@ -23,10 +23,15 @@ consume(struct parser* p) {
 }
 
 static struct ast_node*
+parse_class(struct parser* p) {
+	
+}
+
+static struct ast_node*
 parse_node(struct parser* p) {
 	struct token* fst = next(p);
 	if (cmp_lexeme(fst, "class")) {
-		
+		parse_class(p);
 	}
 	return NULL;
 }

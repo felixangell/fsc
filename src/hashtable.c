@@ -2,9 +2,13 @@
 
 #include <stdlib.h>
 
+#include "../SipHash/siphash.h"
+
+/*
 static i32 hash(char* key) {
 
 }
+*/
 
 struct hashtable* hashtable_make(u64 size) {
 	struct hashtable* table = malloc(sizeof(*table));
