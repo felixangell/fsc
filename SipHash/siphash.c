@@ -16,9 +16,8 @@
  */
 
 
+
 #include "siphash.h"
-
-
 
 #include <assert.h>
 #include <stdint.h>
