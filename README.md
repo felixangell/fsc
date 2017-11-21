@@ -1,0 +1,2 @@
+# lcc
+lazy c compiler
