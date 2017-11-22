@@ -69,13 +69,19 @@ main(int argc, char** argv) {
 	struct compilation_unit units[argc - 1];
 	memset(&units, 0, argc - 1);
 
+	printf("Loading compilation units:\n");
+	printf("- ");
 	int num_units = 0;
 	for (int i = 1; i < argc; i++) {
+		if (i > 1) printf(", ");
+		if (i % 5 == 0) putchar('\n');
+
 		if (has_suffix(argv[i], ".c")) {
-			printf("Loading compilation unit '%s'\n", argv[i]);
+			printf("'%s'", argv[i]);
 			units[num_units++] = (struct compilation_unit){.path = argv[i]};
 		}
 	}
+	putchar('\n');
 
 	// first we run lex/parse on all files
 
