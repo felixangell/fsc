@@ -229,9 +229,29 @@ is_not_char_closer(char c) {
 static struct token* 
 recognize_character(struct lexer* lex) {
 	expect(lex, '\'');
-	// FIXME: this is done for now by just eating everything
-	// inbetween single quotes.
-	struct token* char_tok = consume_while(lex, is_not_char_closer);
+
+	uint64_t initial = lex->pos;
+
+	{
+		while (!is_eof(lex)) {
+			if (peek(lex) == '\'') {
+				break;
+			}
+
+			// FIXME properly handle escape characters.
+			if (peek(lex) == '\\') {
+				consume(lex);
+				consume(lex);
+			} else {
+				consume(lex);
+			}
+		}
+	}
+
+	struct token* char_tok = malloc(sizeof(*char_tok));
+	char_tok->lexeme = &lex->unit->contents[initial];
+	char_tok->length = lex->pos - initial;
+
 	expect(lex, '\'');
 	char_tok->type = T_CHAR;
 	return char_tok;
@@ -264,8 +284,6 @@ tokenize(struct lexer* lex, struct compilation_unit* unit) {
 			array_list_push(tokens, recognize_number(lex));
 		}
 		else {
-			printf("we got dat %c or %d\n", current, current);
-
 			switch (current) {
 				case '/': {
 					if (peek_at(lex, 1) == '/')
