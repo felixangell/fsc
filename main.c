@@ -2,11 +2,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <unistd.h>
 
 #include "array_list.h"
 #include "lex.h"
 #include "parse.h"
 #include "comp_unit.h"
+#include "token.h"
 
 static bool
 has_suffix(const char* str, const char* suffix) {
@@ -20,9 +22,23 @@ has_suffix(const char* str, const char* suffix) {
 
 static void 
 read_comp_unit(struct compilation_unit* unit) {
-	FILE* file = fopen(unit->path, "r");
-	if (!file) {
-		fprintf(stderr, "failed to read file '%s'\n", unit->path);
+	// til i write my own pre-processor use the
+	// existing preprocessor from GCC
+
+	char pp_file_path[512];
+	sprintf(pp_file_path, "%s.ppc", unit->path);
+
+	{
+		char cmd[512] = {0};
+		sprintf(cmd, "cc -E %s > %s", unit->path, pp_file_path);
+		system(cmd);
+	}	
+
+	FILE* file = fopen(pp_file_path, "r");
+	if (file == NULL) {
+		char error_msg[2048];
+		sprintf(error_msg, "failed to read file '%s'\n", pp_file_path);
+		perror(error_msg);
 		return;
 	}
 
@@ -33,25 +49,31 @@ read_comp_unit(struct compilation_unit* unit) {
 	printf(" - file '%s' is %zd bytes\n", unit->path, unit->length);
 
 	unit->contents = malloc(unit->length + 1);
-	if (!unit->contents) {
+	if (unit->contents == NULL) {
 		fprintf(stderr, "failed to allocate memory for file '%s'\n", unit->path);
 		return;
 	}
 
 	fread(unit->contents, sizeof(*unit->contents), unit->length, file);
 	unit->contents[unit->length] = '\0';
+
+	fclose(file);
+
+	// remove the generated pp file
+	// once it has been read into memory.
+	remove(pp_file_path);
 }
 
 int 
 main(int argc, char** argv) {
-	struct compilation_unit* units[argc - 1];
+	struct compilation_unit units[argc - 1];
+	memset(&units, 0, argc - 1);
+
 	int num_units = 0;
 	for (int i = 1; i < argc; i++) {
 		if (has_suffix(argv[i], ".c")) {
 			printf("Loading compilation unit '%s'\n", argv[i]);
-			units[num_units++] = &(struct compilation_unit){
-				.path = argv[i],
-			};
+			units[num_units++] = (struct compilation_unit){.path = argv[i]};
 		}
 	}
 
@@ -59,7 +81,7 @@ main(int argc, char** argv) {
 
 	printf("Lexical Analysis on %d compilation unit(s)\n", num_units);
 	for (int i = 0; i < num_units; i++) {
-		struct compilation_unit* current_unit = units[i];
+		struct compilation_unit* current_unit = &units[i];
 
 		// we do the file reading here just before we lex
 		// this is because we dont want to load all the files 
@@ -70,13 +92,17 @@ main(int argc, char** argv) {
 		struct lexer lex_inst = {
 			.pos = 0,
 		};
-		parse(tokenize(&lex_inst, current_unit));
+		struct array_list* token_stream = tokenize(&lex_inst, current_unit);
+		for (int i = 0; i < token_stream->length; i++) {
+			struct token* tok = token_stream->items[i];
+			//print_tok(tok);
+		}
 	}
 
 	// cleanup stuff
 	{
 		for (int i = 0; i < num_units; i++) {
-			struct compilation_unit* unit = units[i];
+			struct compilation_unit* unit = &units[i];
 			free(unit->contents);
 		}
 	}

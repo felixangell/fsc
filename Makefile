@@ -2,7 +2,7 @@ src = $(wildcard *.c)
 obj = $(patsubst %.c,%.o,$(src))
 out := lcc
 
-CCFLAGS = -Wall -Wextra -g -std=c99
+CCFLAGS = -Wall -Wextra -g3 -std=c99
 
 print-%  : ; @echo $* = $($*)
 
@@ -18,5 +18,6 @@ self: $(out)
 	./$(out) $(src)
 
 clean:
+	-rm -f *.ppc
 	-rm -f $(obj)
 	-rm -f $(out)

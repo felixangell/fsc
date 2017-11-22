@@ -8,11 +8,12 @@ struct token {
 	u64 length;
 	enum {
 		T_IDENTIFIER,
+		T_KEYWORD,
 		T_INTEGER,
 		T_FLOAT,
 		T_STRING,
 		T_CHAR,
-		T_SYMBOL,
+		T_PUNCTUATOR,
 	} type;
 };
 

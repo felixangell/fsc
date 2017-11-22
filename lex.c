@@ -47,8 +47,8 @@ print_tok(struct token* tok) {
 	/// make sure this is up to date with
 	/// token.h!
 	static const char* token_types[] = {
-		"identifier", "integer", "float",
-		"string", "character", "symbol",
+		"identifier", "keyword", "integer", "float",
+		"string", "character", "punctuator",
 	};
 
 	char lexeme[tok->length + 1];
@@ -103,10 +103,38 @@ is_identifier(char c) {
 	return isalnum(c) || c == '_';
 }
 
+char* RESERVED_KEYWORDS[] = {
+	"auto","break","case","char","const","continue","default","do","double","else","enum","extern","float",
+	"for","goto","if","inline","int","long","register","restrict","return","short","signed","sizeof","static",
+	"struct","switch","typedef","union","unsigned","void","volatile","while","_Bool","_Complex","_Imaginary"
+};
+static inline bool is_reserved_keyword(char* keyword) {
+	for (int i = 0; i < array_len(RESERVED_KEYWORDS); i++) {
+		if (!strcmp(keyword, RESERVED_KEYWORDS[i])) {
+			return true;
+		}
+	}
+	return false;
+}
+
 static struct token* 
 recognize_identifier(struct lexer* lex) {
 	struct token* tok = consume_while(lex, is_identifier);
-	tok->type = T_IDENTIFIER;
+
+	{
+		char val[512] = {0};
+		memcpy(&val, tok->lexeme, tok->length);
+
+		// FIXME: this is very slow and should be replaced with
+		// a hash set lookup or something but i would need
+		// to implement a hash set so i wont be getting round
+		// to this any time soon.
+		tok->type = T_IDENTIFIER;
+		if (is_reserved_keyword(val)) {
+			tok->type = T_KEYWORD;			
+		}
+	}
+
 	return tok;
 }
 
@@ -158,12 +186,15 @@ get_symbol_size(struct lexer* lex) {
 		"*=", "/=", "%%=", "+=", "-=", "&=", "^=", "|="
 	};
 
-	char* three = &lex->unit->contents[lex->pos];
+	char symbol[8] = {0};
+	memcpy(&symbol, &lex->unit->contents[lex->pos], 3);
+
 	for (int i = 0; i < arr_len(keywords); i++) {
-		if (has_prefix(three, keywords[i])) {
+		if (has_prefix(symbol, keywords[i])) {
 			return strlen(keywords[i]);
 		}
 	}
+
 	return 1;
 }
 
@@ -171,7 +202,9 @@ get_symbol_size(struct lexer* lex) {
 // the surrounding quotes are discarded.
 static struct token* 
 recognize_symbol(struct lexer* lex) {
-	return consume_amount(lex, get_symbol_size(lex));
+	struct token* tok = consume_amount(lex, get_symbol_size(lex));
+	tok->type = T_PUNCTUATOR;
+	return tok;
 }
 
 static inline bool 
@@ -190,7 +223,7 @@ recognize_string(struct lexer* lex) {
 
 static inline bool 
 is_not_char_closer(char c) {
-	return (c != '\'');
+	return c != '\'';
 }
 
 static struct token* 
@@ -217,17 +250,22 @@ tokenize(struct lexer* lex, struct compilation_unit* unit) {
 	struct array_list* tokens = array_list_make(8);
 	lex->unit = unit;
 
-	while (lex->pos < unit->length) {
+	while (!is_eof(lex)) {
 		skip_layout(lex);
 		char current = peek(lex);
 		
-		if (islower(current) || isupper(current)) {
+		if (current == '#') {
+			skip_line(lex);
+		}
+		else if (current == '_' || islower(current) || isupper(current)) {
 			array_list_push(tokens, recognize_identifier(lex));
 		}
 		else if (isdigit(current)) {
 			array_list_push(tokens, recognize_number(lex));
 		}
 		else {
+			printf("we got dat %c or %d\n", current, current);
+
 			switch (current) {
 				case '/': {
 					if (peek_at(lex, 1) == '/')
@@ -235,15 +273,6 @@ tokenize(struct lexer* lex, struct compilation_unit* unit) {
 					else
 						array_list_push(tokens, recognize_symbol(lex));
 					break;
-				}
-				case '#': {
-					/// FIXME
-					/// this is just a little hack so that we ignore
-					/// most pre-processor directives. this wont work
-					/// for multi line backslash thingies, but we
-					/// can take this into account some point...
-					skip_line(lex);
-					break; 
 				}
 				case '"': {
 					array_list_push(tokens, recognize_string(lex));
@@ -265,8 +294,11 @@ tokenize(struct lexer* lex, struct compilation_unit* unit) {
 					if (is_eof(lex)) 
 						break;
 
-					fprintf(stderr, "error: %s:%d/%d, illegal character '%c':\n", 
-					lex->unit->path, (int) lex->pos, (int) lex->unit->length, current);
+					char sample[128];
+					memcpy(&sample, &lex->unit->contents[lex->pos], 96);
+
+					fprintf(stderr, "error: %s:%d/%d, illegal character '%c':\n-> %s\n", 
+					lex->unit->path, (int) lex->pos, (int) lex->unit->length, current, sample);
 					exit(1);  
 					break;
 				}

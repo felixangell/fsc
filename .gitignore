@@ -4,6 +4,7 @@
 bin/
 obj/
 *.o
+*.ppc
 
 *.dll
 *.7z
