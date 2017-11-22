@@ -94,8 +94,9 @@ expect(struct lexer* lex, char c) {
 	if (peek(lex) == c) {
 		return consume(lex);
 	}
-	fprintf(stderr, "error: unexpecteed symbol '%c'\n", c);
-	exit(1);
+
+	fprintf(stderr, "error: unexpected symbol '%c'\n", c);
+	assert(0);
 }
 
 static inline bool 
@@ -183,7 +184,8 @@ get_symbol_size(struct lexer* lex) {
 	static const char* keywords[] = {
 		"<<=", ">>=", "...",
 		"<<", ">>", "<=", ">=", "==", "!=", "&&", "||",
-		"*=", "/=", "%%=", "+=", "-=", "&=", "^=", "|="
+		"*=", "/=", "%%=", "+=", "-=", "&=", "^=", "|=",
+		"--", "++", "->",
 	};
 
 	char symbol[8] = {0};

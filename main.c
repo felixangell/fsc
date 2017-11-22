@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
-#include <unistd.h>
+#include <time.h>
 
 #include "array_list.h"
 #include "lex.h"
@@ -66,6 +66,8 @@ read_comp_unit(struct compilation_unit* unit) {
 
 int 
 main(int argc, char** argv) {
+	clock_t compiler_start = clock();
+
 	struct compilation_unit units[argc - 1];
 	memset(&units, 0, argc - 1);
 
@@ -95,13 +97,12 @@ main(int argc, char** argv) {
 		// have loads of memory allocated and it can just exit.
 		read_comp_unit(current_unit);
 
-		struct lexer lex_inst = {
-			.pos = 0,
-		};
+		struct lexer lex_inst = {0};
 		struct array_list* token_stream = tokenize(&lex_inst, current_unit);
+		
 		for (int i = 0; i < token_stream->length; i++) {
 			struct token* tok = token_stream->items[i];
-			//print_tok(tok);
+			print_tok(tok);
 		}
 	}
 
@@ -112,6 +113,11 @@ main(int argc, char** argv) {
 			free(unit->contents);
 		}
 	}
+
+	clock_t compiler_end = clock();
+	double time_taken_sec = ((double) (compiler_end - compiler_start)) / CLOCKS_PER_SEC;
+	double time_taken_ms = time_taken_sec / 1000;
+	printf("compiled in %f/ms\n", time_taken_ms);
 
 	return 0;
 }
