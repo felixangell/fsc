@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
-#include <time.h>
+#include <sys/time.h>
 
 #include "array_list.h"
 #include "lex.h"
@@ -64,9 +64,17 @@ read_comp_unit(struct compilation_unit* unit) {
 	remove(pp_file_path);
 }
 
+long long
+curr_time_ms() {
+	struct timeval timer;
+	gettimeofday(&timer, NULL);
+	long long time = timer.tv_sec * 1000LL + timer.tv_usec / 1000;
+	return time;
+}
+
 int 
 main(int argc, char** argv) {
-	clock_t compiler_start = clock();
+	long long start_time = curr_time_ms();
 
 	struct compilation_unit units[argc - 1];
 	memset(&units, 0, argc - 1);
@@ -114,10 +122,9 @@ main(int argc, char** argv) {
 		}
 	}
 
-	clock_t compiler_end = clock();
-	double time_taken_sec = ((double) (compiler_end - compiler_start)) / CLOCKS_PER_SEC;
-	double time_taken_ms = time_taken_sec / 1000;
-	printf("compiled in %f/ms\n", time_taken_ms);
+	long long end_time = curr_time_ms();
+	int time_taken_ms = end_time - start_time;
+	printf("compiled in %d/ms\n", time_taken_ms);
 
 	return 0;
 }
