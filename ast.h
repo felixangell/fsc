@@ -62,10 +62,6 @@ struct ast_node {
 			struct type_node* function_type;
 			struct block_node* body;
 		} function_decl;
-		struct {
-			struct token* name;
-			struct array_list* methods;
-		} impl_decl;
 	} node;
 	u32 type;
 };
