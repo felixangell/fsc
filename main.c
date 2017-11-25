@@ -76,6 +76,11 @@ int
 main(int argc, char** argv) {
 	long long start_time = curr_time_ms();
 
+	if (argc <= 1) {
+		fprintf(stderr, "error: no input files\n");
+		return -1;
+	}
+
 	struct compilation_unit units[argc - 1];
 	memset(&units, 0, argc - 1);
 
@@ -107,7 +112,7 @@ main(int argc, char** argv) {
 
 		struct lexer lex_inst = {0};
 		struct array_list* token_stream = tokenize(&lex_inst, current_unit);
-		
+
 		for (int i = 0; i < token_stream->length; i++) {
 			struct token* tok = token_stream->items[i];
 			print_tok(tok);
