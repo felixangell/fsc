@@ -3,12 +3,15 @@
 #include <string.h>
 #include <stdbool.h>
 #include <sys/time.h>
+#include <unistd.h>
 
 #include "array_list.h"
 #include "lex.h"
 #include "parse.h"
 #include "comp_unit.h"
 #include "token.h"
+
+static bool DUMP_TOK_STREAM = false;
 
 static bool
 has_suffix(const char* str, const char* suffix) {
@@ -20,8 +23,13 @@ has_suffix(const char* str, const char* suffix) {
 	return !strcmp(&str[str_len - suffix_len], suffix);
 }
 
-static void 
+static void
 read_comp_unit(struct compilation_unit* unit) {
+	if (access(unit->path, F_OK) == -1) {
+		fprintf(stderr, "error: no such file '%s'\n", unit->path);
+		return;
+	}
+
 	// til i write my own pre-processor use the
 	// existing preprocessor from GCC
 
@@ -37,7 +45,7 @@ read_comp_unit(struct compilation_unit* unit) {
 	FILE* file = fopen(pp_file_path, "r");
 	if (file == NULL) {
 		char error_msg[2048];
-		sprintf(error_msg, "failed to read file '%s'\n", pp_file_path);
+		sprintf(error_msg, "error: failed to read file '%s'\n", pp_file_path);
 		perror(error_msg);
 		return;
 	}
@@ -50,7 +58,7 @@ read_comp_unit(struct compilation_unit* unit) {
 
 	unit->contents = malloc(unit->length + 1);
 	if (unit->contents == NULL) {
-		fprintf(stderr, "failed to allocate memory for file '%s'\n", unit->path);
+		fprintf(stderr, "error: failed to allocate memory for file '%s'\n", unit->path);
 		return;
 	}
 
@@ -113,9 +121,11 @@ main(int argc, char** argv) {
 		struct lexer lex_inst = {0};
 		struct array_list* token_stream = tokenize(&lex_inst, current_unit);
 
-		for (int i = 0; i < token_stream->length; i++) {
-			struct token* tok = token_stream->items[i];
-			print_tok(tok);
+		if (DUMP_TOK_STREAM) {
+			for (int i = 0; i < token_stream->length; i++) {
+				struct token* tok = token_stream->items[i];
+				print_tok(tok);
+			}
 		}
 	}
 
