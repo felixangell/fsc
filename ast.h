@@ -1,69 +1,50 @@
 #ifndef AST_H
 #define AST_H
 
+#include <collectc/array.h>
+
 #include "type.h"
 
-struct type_node {
+struct type {
+	int kind;
 	union {
-		// type
-		// e.g. int, float, double, some_structure
-		struct token* primitive;
-		
-		// type [name] (type name, type name)
+		struct type* ptr;
 		struct {
-			struct type_node* return_type;
-			struct named_unit* name;
-			struct array_list* types;
-			struct array_list* names;
-		} function;
-
-		// {type [name], type [name], type [name]}
-		struct {
-			struct array_list* types;
-			struct array_list* names;
+			Array* fields;
+			int offset;
+			bool is_union; // false => it's a structure
 		} structure;
-		
-		// (type [name], type [name], type [name])
 		struct {
-			struct array_list* types;
-		} tuple;
-
-		// [type]
+			int offs;
+			int size;
+		} bit_field;
 		struct {
-			struct type_node* base;
-		} array;
-
-		// &type
-		struct {
-			struct type_node* base;
-		} reference;
-
-		// type*
-		struct {
-			struct type_node* base;
-		} pointer;
+			struct type* ret;
+			Array* params;
+			bool variadic;
+			// old func style?
+		} function;
 	};
-	u32 kind;
 };
 
-struct named_unit {
-	bool32 mutable;
-	struct token* name;
+/*
+	declaration_spec =
+	storage_class_spec declaration_spec,
+	type_specifier declaration_spec,
+	type_qualifer declaration_spec,
+	function_spec declaration_spec;
+*/
+
+enum decl_spec_type {
+	DS_STORAGE_CLASS,
+	DS_TYPE_SPECIFIER,
+	DS_TYPE_QUALIFIER,
+	DS_FUNCTION_SPEC,
 };
 
-struct block_node {
-	struct array_list* nodes;
-};
-
-struct ast_node {
-	union {
-		struct function_decl_node {
-			struct named_unit* name;
-			struct type_node* function_type;
-			struct block_node* body;
-		} function_decl;
-	} node;
-	u32 type;
+struct decl_spec {
+	struct token* t;
+	enum decl_spec_type type;
 };
 
 #endif

@@ -3,9 +3,9 @@
 #include <stdbool.h>
 #include <ctype.h>
 #include <string.h>
+#include <collectc/Array.h>
 
 #include "token.h"
-#include "array_list.h"
 #include "lex.h"
 #include "comp_unit.h"
 
@@ -267,9 +267,11 @@ skip_line(struct lexer* lex) {
 	expect(lex, '\n');
 }
 
-struct array_list* 
+Array* 
 tokenize(struct lexer* lex, struct compilation_unit* unit) {
-	struct array_list* tokens = array_list_make(8);
+	Array* tokens;
+	array_new(&tokens);
+
 	lex->unit = unit;
 
 	while (!is_eof(lex)) {
@@ -280,10 +282,10 @@ tokenize(struct lexer* lex, struct compilation_unit* unit) {
 			skip_line(lex);
 		}
 		else if (current == '_' || islower(current) || isupper(current)) {
-			array_list_push(tokens, recognize_identifier(lex));
+			array_add(tokens, recognize_identifier(lex));
 		}
 		else if (isdigit(current)) {
-			array_list_push(tokens, recognize_number(lex));
+			array_add(tokens, recognize_number(lex));
 		}
 		else {
 			switch (current) {
@@ -291,15 +293,15 @@ tokenize(struct lexer* lex, struct compilation_unit* unit) {
 					if (peek_at(lex, 1) == '/')
 						skip_line(lex);
 					else
-						array_list_push(tokens, recognize_symbol(lex));
+						array_add(tokens, recognize_symbol(lex));
 					break;
 				}
 				case '"': {
-					array_list_push(tokens, recognize_string(lex));
+					array_add(tokens, recognize_string(lex));
 					break;
 				}
 				case '\'': {
-					array_list_push(tokens, recognize_character(lex));
+					array_add(tokens, recognize_character(lex));
 					break;
 				}
 				case '[': case ']': case '(': case ')': case '{': case '}':
@@ -307,7 +309,7 @@ tokenize(struct lexer* lex, struct compilation_unit* unit) {
 				case '!': case '%': case '<': case '>': case '^':
 				case '|': case '?': case ':': case ';': case '=':
 				case ',': {
-					array_list_push(tokens, recognize_symbol(lex));
+					array_add(tokens, recognize_symbol(lex));
 					break;
 				}
 				default: {

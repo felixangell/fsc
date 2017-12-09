@@ -1,6 +1,5 @@
 #include "jjvm.h"
 #include "instr.h"
-#include "array_list.h"
 #include "virtual_thread.h"
 
 static struct virtual_thread* MAIN_THREAD;
@@ -52,11 +51,13 @@ enum {
 };
 
 void 
-execute_instructions(struct jjvm_inst* inst, struct array_list* instrs) {
+execute_instructions(struct jjvm_inst* inst, Array* instrs) {
 	struct virtual_thread* curr = inst->curr_thrd;
 
-	while (curr->pc < instrs->capacity) {
-		struct jjvm_instruction* instr = instrs->items[curr->pc++];
+	while (curr->pc < array_size(instrs)) {
+		struct jjvm_instruction* instr;
+		array_get_at(instrs, curr->pc++, (void*) &instr);
+
 		switch (instr->id) {
 			// TODO:
 		}

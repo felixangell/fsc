@@ -1,12 +1,15 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "ast.h"
-#include "array_list.h"
 #include "parse.h"
 #include "token.h"
 
 /*
+	https://cs.wmich.edu/~gupta/teaching/cs4850/sumII06/The%20syntax%20of%20C%20in%20Backus-Naur%20form.htm
+	http://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf
+
 	primary_expr = 
 		identifier
 		constant
@@ -123,15 +126,19 @@
 		enum_spec
 		typedef_name;
 
-	struct_or_union =
-		struct
-		union;
+	type_qualifier = 
+		const
+		atomic;
 
 	declaration_spec =
 		storage_class_spec declaration_spec,
 		type_specifier declaration_spec,
 		type_qualifer declaration_spec,
 		function_spec declaration_spec;
+
+	struct_or_union =
+		struct
+		union;
 
 	init_decl_list =
 		init_decl
@@ -144,7 +151,9 @@
 
 static struct token* 
 peek(struct parser* p, int offs) {
-	return p->tokens->items[p->pos + offs];
+	struct token* t;
+	array_get_at(p->tokens, p->pos + offs, (void*) &t);
+	return t;
 }
 
 static inline struct token*
@@ -168,53 +177,88 @@ expect_lexeme(struct parser* p, const char* lexeme) {
 	return NULL;
 }
 
-static struct ast_node*
-parse_struct(struct parser* p) {
-	expect_lexeme(p, "struct");
-	return NULL;
+static inline bool
+is_type(struct token* t) {
+	static const char* TYPES[] = {
+		"_Alignas", "auto", "_Bool", "char",
+		"_Complex", "const", "double", "enum",
+		"extern", "float", "_Imaginary", "inline",
+		"int", "long", "_Noreturn" ,"register", "restrict",
+		"short", "signed", "static", "struct", "typedef",
+		"typeof", "union", "unsigned", "void", "volatile",
+	};
+
+	char token_lexeme[t->length];
+	memcpy(&token_lexeme, t->lexeme, t->length);
+
+	// this is slow, fixme
+	for (int i = 0; i < array_len(TYPES); i++) {
+		if (!strcmp(token_lexeme, TYPES[i])) {
+			return true;
+		}
+	}
+
+	return false;
 }
 
-static struct ast_node*
-parse_enum(struct parser* p) {
-	expect_lexeme(p, "enum");	
-	return NULL;
+static void parse_decl_spec(struct type* base_type) {
+
 }
 
-static struct ast_node*
-parse_class(struct parser* p) {
-	expect_lexeme(p, "class");
-	return NULL;	
-}
+/*
+	storage_class_spec = 
+		typedef
+		extern
+		static
+		auto
+		register;
 
-static struct ast_node*
-parse_impl(struct parser* p) {
-	expect_lexeme(p, "impl");
-	return NULL;
+	type_specifier =
+		void
+		char
+		short
+		int
+		long
+		float
+		double
+		signed
+		unsigned
+		_Bool
+		_Complex
+		struct_or_union_spec
+		enum_spec
+		typedef_name;
+
+	type_qualifier = 
+		const
+		atomic;
+
+	declaration_spec =
+		storage_class_spec declaration_spec,
+		type_specifier declaration_spec,
+		type_qualifer declaration_spec,
+		function_spec declaration_spec;
+
+*/
+static void parse_decl() {
+	struct type base_type;
+	parse_decl_spec(&base_type);
+
+	for (;;) {
+		
+	}
 }
 
 static struct ast_node*
 parse_node(struct parser* p) {
-	struct token* fst = next(p);
-	if (cmp_lexeme(fst, "class")) {
-		return parse_class(p);
-	}
-	else if (cmp_lexeme(fst, "struct")) {
-		return parse_struct(p);
-	}
-	else if (cmp_lexeme(fst, "enum")) {
-		return parse_enum(p);
-	}
-	else if (cmp_lexeme(fst, "impl")) {
-		return parse_impl(p);
-	}
+	for (;;) {
 
-	printf("what is this...?\n");
-	print_tok(fst);
+	}
 	return NULL;
 }
 
-void 
-parse(struct array_list* tokens) {
+Array* 
+parse(Array* tokens) {
 	struct parser p = {
 		.tokens = tokens,
 		.pos = 0,
@@ -223,11 +267,14 @@ parse(struct array_list* tokens) {
 	// maybe measure and make
 	// this a reasonable assumption
 	// but for now it'll do
-	struct array_list* ast_nodes = array_list_make(tokens->length / 4);
-	while (p.pos < tokens->length) {
+	Array* ast_nodes;
+	array_new(&ast_nodes);
+	while (p.pos < array_size(tokens)) {
 		struct ast_node* node = parse_node(&p);
 		if (node != NULL) {
-			array_list_push(ast_nodes, node);
+			array_add(ast_nodes, node);
 		}
 	}
+
+	return ast_nodes;
 }

@@ -1,9 +1,10 @@
 #ifndef LEX_H
 #define LEX_H
 
+#include <collectc/array.h>
+
 #include "type.h"
 
-struct array_list;
 struct compilation_unit;
 
 struct lexer {
@@ -11,7 +12,7 @@ struct lexer {
 	u64 pos;
 };
 
-struct array_list* 
+Array* 
 tokenize(struct lexer* lex, struct compilation_unit* unit);
 
 #endif

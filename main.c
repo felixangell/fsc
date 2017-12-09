@@ -4,8 +4,8 @@
 #include <stdbool.h>
 #include <sys/time.h>
 #include <unistd.h>
+#include <collectc/array.h>
 
-#include "array_list.h"
 #include "lex.h"
 #include "parse.h"
 #include "comp_unit.h"
@@ -119,14 +119,17 @@ main(int argc, char** argv) {
 		read_comp_unit(current_unit);
 
 		struct lexer lex_inst = {0};
-		struct array_list* token_stream = tokenize(&lex_inst, current_unit);
+		Array* token_stream = tokenize(&lex_inst, current_unit);
 
 		if (DUMP_TOK_STREAM) {
-			for (int i = 0; i < token_stream->length; i++) {
-				struct token* tok = token_stream->items[i];
+			for (int i = 0; i < array_size(token_stream); i++) {
+				struct token* tok;
+				array_get_at(token_stream, i, (void*) &tok);
 				print_tok(tok);
 			}
 		}
+
+		parse(token_stream);
 	}
 
 	// cleanup stuff

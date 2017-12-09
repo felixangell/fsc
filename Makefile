@@ -3,6 +3,7 @@ obj = $(patsubst %.c,%.o,$(src))
 out := lcc
 
 CCFLAGS = -Wall -Wextra -g3 -std=c99
+LDFLAGS = -lcollectc
 
 print-%  : ; @echo $* = $($*)
 
@@ -12,7 +13,7 @@ default: $(out)
 	$(CC) -c $< -o $@
 
 $(out): $(obj)
-	$(CC) $(obj) -o $@
+	$(CC) $(LDFLAGS) $(obj) -o $@
 
 self: $(out)
 	./$(out) $(src)
