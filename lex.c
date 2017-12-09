@@ -3,7 +3,8 @@
 #include <stdbool.h>
 #include <ctype.h>
 #include <string.h>
-#include <collectc/Array.h>
+#include <collectc/array.h>
+#include <collectc/hashset.h>
 
 #include "token.h"
 #include "lex.h"
@@ -110,12 +111,20 @@ char* RESERVED_KEYWORDS[] = {
 	"struct","switch","typedef","union","unsigned","void","volatile","while","_Bool","_Complex","_Imaginary"
 };
 static inline bool is_reserved_keyword(char* keyword) {
-	for (int i = 0; i < array_len(RESERVED_KEYWORDS); i++) {
-		if (!strcmp(keyword, RESERVED_KEYWORDS[i])) {
-			return true;
-		}
+	static HashSet* keyword_set = NULL;
+
+	// we should only do this once
+	// TODO: we should probably free these all
+	// but it really isnt necessary as the OS
+	// should clean up most of it anyways
+	if (keyword_set == NULL) {
+		hashset_new(&keyword_set);
+		for (int i = 0; i < array_len(RESERVED_KEYWORDS); i++) {
+			hashset_add(keyword_set, RESERVED_KEYWORDS[i]);
+		}		
 	}
-	return false;
+
+	return hashset_contains(keyword_set, keyword);
 }
 
 static struct token* 
@@ -125,11 +134,6 @@ recognize_identifier(struct lexer* lex) {
 	{
 		char val[512] = {0};
 		memcpy(&val, tok->lexeme, tok->length);
-
-		// FIXME: this is very slow and should be replaced with
-		// a hash set lookup or something but i would need
-		// to implement a hash set so i wont be getting round
-		// to this any time soon.
 		tok->type = T_IDENTIFIER;
 		if (is_reserved_keyword(val)) {
 			tok->type = T_KEYWORD;			

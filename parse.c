@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <collectc/hashset.h>
 
 #include "ast.h"
 #include "parse.h"
@@ -179,7 +180,7 @@ expect_lexeme(struct parser* p, const char* lexeme) {
 
 static inline bool
 is_type(struct token* t) {
-	static const char* TYPES[] = {
+	static char* TYPES[] = {
 		"_Alignas", "auto", "_Bool", "char",
 		"_Complex", "const", "double", "enum",
 		"extern", "float", "_Imaginary", "inline",
@@ -187,18 +188,17 @@ is_type(struct token* t) {
 		"short", "signed", "static", "struct", "typedef",
 		"typeof", "union", "unsigned", "void", "volatile",
 	};
-
-	char token_lexeme[t->length];
-	memcpy(&token_lexeme, t->lexeme, t->length);
-
-	// this is slow, fixme
-	for (int i = 0; i < array_len(TYPES); i++) {
-		if (!strcmp(token_lexeme, TYPES[i])) {
-			return true;
+	static HashSet* types_table;
+	if (types_table == NULL) {
+		hashset_new(&types_table);
+		for (int i = 0; i < array_len(TYPES); i++) {
+			hashset_add(types_table, TYPES[i]);
 		}
 	}
 
-	return false;
+	char token_lexeme[t->length];
+	memcpy(&token_lexeme, t->lexeme, t->length);
+	return hashset_contains(types_table, token_lexeme);
 }
 
 static void parse_decl_spec(struct type* base_type) {
