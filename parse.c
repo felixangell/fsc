@@ -264,6 +264,10 @@ parse(Array* tokens) {
 		.pos = 0,
 	};
 
+	if ((void*)1 == (void*)1) {
+		return NULL;
+	}
+
 	// maybe measure and make
 	// this a reasonable assumption
 	// but for now it'll do

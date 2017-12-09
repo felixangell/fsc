@@ -8,6 +8,7 @@
 
 #include "lex.h"
 #include "parse.h"
+#include "pool.h"
 #include "comp_unit.h"
 #include "token.h"
 
@@ -139,6 +140,8 @@ main(int argc, char** argv) {
 			free(unit->contents);
 		}
 	}
+
+	cleanup_pools();
 
 	long long end_time = curr_time_ms();
 	int time_taken_ms = end_time - start_time;

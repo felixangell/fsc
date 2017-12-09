@@ -6,6 +6,7 @@
 #include <collectc/array.h>
 #include <collectc/hashset.h>
 
+#include "pool.h"
 #include "token.h"
 #include "lex.h"
 #include "comp_unit.h"
@@ -195,6 +196,8 @@ get_symbol_size(struct lexer* lex) {
 	char symbol[8] = {0};
 	memcpy(&symbol, &lex->unit->contents[lex->pos], 3);
 
+	// TODO: we could use a hash set here but for now
+	// ill leave it as is.
 	for (int i = 0; i < arr_len(keywords); i++) {
 		if (has_prefix(symbol, keywords[i])) {
 			return strlen(keywords[i]);
@@ -271,11 +274,15 @@ skip_line(struct lexer* lex) {
 	expect(lex, '\n');
 }
 
+static inline int align(int n, int m) {
+    int rem = n % m;
+    return (rem == 0) ? n : n - rem + m;
+}
+
 Array* 
 tokenize(struct lexer* lex, struct compilation_unit* unit) {
 	Array* tokens;
 	array_new(&tokens);
-
 	lex->unit = unit;
 
 	while (!is_eof(lex)) {
