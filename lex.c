@@ -71,7 +71,14 @@ peek_at(struct lexer* lex, int offs) {
 
 static char 
 consume(struct lexer* lex) {
-	return lex->unit->contents[lex->pos++];
+	char curr = lex->unit->contents[lex->pos];
+	if (curr == '\n') {
+		lex->row++;
+		lex->col = 1;
+	}
+	lex->col++;
+	lex->pos++;
+	return curr;
 }
 
 static inline bool 
@@ -279,40 +286,62 @@ static inline int align(int n, int m) {
     return (rem == 0) ? n : n - rem + m;
 }
 
+struct token_location capture_location(struct lexer* lex) {
+	return (struct token_location) {
+		.index = lex->pos,
+		.row = lex->row,
+		.col = lex->col,
+	};
+}
+
 Array* 
 tokenize(struct lexer* lex, struct compilation_unit* unit) {
 	Array* tokens;
 	array_new(&tokens);
 	lex->unit = unit;
+	lex->row = lex->col = 1;
+
+	u64 last_line = 0, pad = 0;
 
 	while (!is_eof(lex)) {
+		last_line = lex->row;
 		skip_layout(lex);
+
+		if (lex->row == last_line) {
+			pad = pad + 0;
+		} 
+		else {
+			pad = 0;
+		}
+
 		char current = peek(lex);
-		
+		struct token* recognized_token = NULL;
+		struct token_location start_loc = capture_location(lex);
+
 		if (current == '#') {
 			skip_line(lex);
 		}
 		else if (current == '_' || islower(current) || isupper(current)) {
-			array_add(tokens, recognize_identifier(lex));
+			recognized_token = recognize_identifier(lex);
 		}
 		else if (isdigit(current)) {
-			array_add(tokens, recognize_number(lex));
+			recognized_token = recognize_number(lex);
 		}
 		else {
 			switch (current) {
 				case '/': {
 					if (peek_at(lex, 1) == '/')
 						skip_line(lex);
-					else
-						array_add(tokens, recognize_symbol(lex));
+					else	
+						recognized_token = recognize_symbol(lex);
 					break;
 				}
 				case '"': {
-					array_add(tokens, recognize_string(lex));
+					recognized_token = recognize_string(lex);
 					break;
 				}
 				case '\'': {
-					array_add(tokens, recognize_character(lex));
+					recognized_token = recognize_character(lex);
 					break;
 				}
 				case '[': case ']': case '(': case ')': case '{': case '}':
@@ -320,7 +349,7 @@ tokenize(struct lexer* lex, struct compilation_unit* unit) {
 				case '!': case '%': case '<': case '>': case '^':
 				case '|': case '?': case ':': case ';': case '=':
 				case ',': {
-					array_add(tokens, recognize_symbol(lex));
+					recognized_token = recognize_symbol(lex);
 					break;
 				}
 				default: {
@@ -330,10 +359,25 @@ tokenize(struct lexer* lex, struct compilation_unit* unit) {
 					char sample[128];
 					memcpy(&sample, &lex->unit->contents[lex->pos], 96);
 
-					fprintf(stderr, "error: %s:%d/%d, illegal character '%c':\n-> %s\n", 
-					lex->unit->path, (int) lex->pos, (int) lex->unit->length, current, sample);
+					// NOTE: these are wrong when we take the pre-processed source
+					// code into account HM!
+					fprintf(stderr, "error: %s %d:%d, illegal character '%c', '%d':\n-> %s\n", 
+					lex->unit->path, (int) lex->col, (int) lex->row, current, (int) current, sample);
 					exit(1);  
 					break;
+				}
+
+				if (recognized_token != NULL) {
+					start_loc.col -= pad;
+					struct token_location end_loc = capture_location(lex);
+					end_loc.col -= pad;
+
+					recognized_token->pos = (struct token_span) {
+						.start = start_loc,
+						.end = end_loc,
+					};
+
+					array_add(tokens, recognized_token);
 				}
 			}
 		}

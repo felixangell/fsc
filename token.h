@@ -3,8 +3,17 @@
 
 #include "type.h"
 
+struct token_location {
+	u64 index;
+	u64 row, col;
+};
+
 struct token {
 	const char* lexeme;
+	struct token_span {
+		struct token_location start;
+		struct token_location end;
+	} pos;
 	u64 length;
 	enum {
 		T_IDENTIFIER,

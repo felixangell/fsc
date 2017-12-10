@@ -6,6 +6,8 @@
 static Array* ALLOCATED_POOLS;
 
 void cleanup_pools() {
+    if (ALLOCATED_POOLS == NULL) return;
+
     for (int i = 0; i < array_size(ALLOCATED_POOLS); i++) {
         struct data_pool* pool;
         array_get_at(ALLOCATED_POOLS, i, (void*) &pool);
@@ -32,8 +34,6 @@ static void push_block(struct data_pool* pool) {
 
 struct data_pool* 
 make_pool(uint64_t page_size) {
-    printf("creating pool with page size of %zd\n", page_size);
-
     // we only need to allocate this once
     // this is for keeping track of all pools
     // that are created. they are freed at the

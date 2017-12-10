@@ -109,6 +109,8 @@ main(int argc, char** argv) {
 
 	// first we run lex/parse on all files
 
+	Array* TOKEN_STREAMS[num_units];
+
 	printf("Lexical Analysis on %d compilation unit(s)\n", num_units);
 	for (int i = 0; i < num_units; i++) {
 		struct compilation_unit* current_unit = &units[i];
@@ -120,23 +122,24 @@ main(int argc, char** argv) {
 		read_comp_unit(current_unit);
 
 		struct lexer lex_inst = {0};
-		Array* token_stream = tokenize(&lex_inst, current_unit);
+		TOKEN_STREAMS[i] = tokenize(&lex_inst, current_unit);
 
 		if (DUMP_TOK_STREAM) {
-			for (int i = 0; i < array_size(token_stream); i++) {
+			for (int i = 0; i < array_size(TOKEN_STREAMS[i]); i++) {
 				struct token* tok;
-				array_get_at(token_stream, i, (void*) &tok);
+				array_get_at(TOKEN_STREAMS[i], i, (void*) &tok);
 				print_tok(tok);
 			}
 		}
 
-		parse(token_stream);
+		parse(TOKEN_STREAMS[i]);
 	}
 
 	// cleanup stuff
 	{
 		for (int i = 0; i < num_units; i++) {
 			struct compilation_unit* unit = &units[i];
+			array_destroy(TOKEN_STREAMS[i]);
 			free(unit->contents);
 		}
 	}

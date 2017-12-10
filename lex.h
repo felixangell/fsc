@@ -9,6 +9,7 @@ struct compilation_unit;
 
 struct lexer {
 	struct compilation_unit* unit;
+	u64 row, col;
 	u64 pos;
 };
 
