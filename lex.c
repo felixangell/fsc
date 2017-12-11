@@ -381,6 +381,7 @@ tokenize(struct lexer* lex, struct compilation_unit* unit) {
 
 		if (current == '#') {
 			skip_line(lex);
+			continue;
 		}
 		else if (current == '_' || islower(current) || isupper(current)) {
 			recognized_token = recognize_identifier(lex);
@@ -392,18 +393,23 @@ tokenize(struct lexer* lex, struct compilation_unit* unit) {
 			recognized_token = recognized_other(lex);
 		}
 
-		if (recognized_token != NULL) {
-			start_loc.col -= pad;
-			struct token_location end_loc = capture_location(lex);
-			end_loc.col -= pad;
-
-			recognized_token->pos = (struct token_span) {
-				.start = start_loc,
-				.end = end_loc,
-			};
-
-			array_add(tokens, recognized_token);
+		// this is a bit weird.
+		// recognized_other will return NULL
+		// when we hit EOF, so we have to handle this here.
+		if (is_eof(lex)) {
+			break;
 		}
+
+		start_loc.col -= pad;
+		struct token_location end_loc = capture_location(lex);
+		end_loc.col -= pad;
+
+		recognized_token->pos = (struct token_span) {
+			.start = start_loc,
+			.end = end_loc,
+		};
+
+		array_add(tokens, recognized_token);
 	}
 
 	return (struct lexer_info) {
