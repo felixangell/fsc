@@ -2,11 +2,10 @@
 #define PARSE_H
 
 #include <collectc/array.h>
-
-#include "type.h"
+#include <stdint.h>
 
 struct parser {
-	u64 pos;
+	uint64_t pos;
 	Array* tokens;
 };
 

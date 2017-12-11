@@ -1,11 +1,11 @@
 #ifndef TOKEN_H
 #define TOKEN_H
 
-#include "type.h"
+#include <stdint.h>
 
 struct token_location {
-	u64 index;
-	u64 row, col;
+	uint64_t index;
+	uint64_t row, col;
 };
 
 struct token {
@@ -14,7 +14,7 @@ struct token {
 		struct token_location start;
 		struct token_location end;
 	} pos;
-	u64 length;
+	uint64_t length;
 	enum {
 		T_IDENTIFIER,
 		T_KEYWORD,

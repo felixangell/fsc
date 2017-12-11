@@ -5,13 +5,14 @@
 #include <string.h>
 #include <collectc/array.h>
 #include <collectc/hashset.h>
+#include <assert.h>
 
 #include "pool.h"
 #include "token.h"
 #include "lex.h"
 #include "comp_unit.h"
 
-#define arr_len(x) (int) (sizeof((x)) / sizeof((x)[0]))
+#define array_len(x) (sizeof(x) / sizeof(x[0]))
 
 static bool
 has_prefix(const char* str, const char* what) {
@@ -25,7 +26,7 @@ has_prefix(const char* str, const char* what) {
 
 bool 
 cmp_lexeme(struct token* tok, const char* val) {
-	for (u64 i = 0; i < tok->length; i++) {
+	for (uint64_t i = 0; i < tok->length; i++) {
 		if (tok->lexeme[i] != val[i]) {
 			return false;
 		}
@@ -52,6 +53,8 @@ print_tok(struct token* tok) {
 		"identifier", "keyword", "integer", "float",
 		"string", "character", "punctuator",
 	};
+
+	#define TAB "    "
 
 	char lexeme[tok->length + 1];
 	memset(lexeme, 0, tok->length + 1);
@@ -88,7 +91,7 @@ is_eof(struct lexer* lex) {
 
 static struct token* 
 consume_while(struct lexer* lex, bool (*predicate)(char)) {
-	u64 initial = lex->pos;
+	uint64_t initial = lex->pos;
 	while (!is_eof(lex) && predicate(peek(lex))) {
 		consume(lex);
 	}
@@ -181,7 +184,7 @@ skip_layout(struct lexer* lex) {
 
 static struct token* 
 consume_amount(struct lexer* lex, int offs) {
-	u64 initial = lex->pos;
+	uint64_t initial = lex->pos;
 	for (int i = 0; i < offs; i++) {
 		consume(lex);
 	}
@@ -205,7 +208,7 @@ get_symbol_size(struct lexer* lex) {
 
 	// TODO: we could use a hash set here but for now
 	// ill leave it as is.
-	for (int i = 0; i < arr_len(keywords); i++) {
+	for (int i = 0; i < array_len(keywords); i++) {
 		if (has_prefix(symbol, keywords[i])) {
 			return strlen(keywords[i]);
 		}
@@ -227,7 +230,7 @@ static struct token*
 recognize_string(struct lexer* lex) {
 	expect(lex, '"');
 
-	u64 initial = lex->pos;
+	uint64_t initial = lex->pos;
 
 	{
 		while (!is_eof(lex)) {
@@ -263,7 +266,7 @@ static struct token*
 recognize_character(struct lexer* lex) {
 	expect(lex, '\'');
 
-	u64 initial = lex->pos;
+	uint64_t initial = lex->pos;
 
 	{
 		while (!is_eof(lex)) {
@@ -362,7 +365,7 @@ tokenize(struct lexer* lex, struct compilation_unit* unit) {
 	lex->unit = unit;
 	lex->row = lex->col = 1;
 
-	u64 last_line = 0, pad = 0;
+	uint64_t last_line = 0, pad = 0;
 
 	while (!is_eof(lex)) {
 		last_line = lex->row;

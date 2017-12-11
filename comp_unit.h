@@ -1,11 +1,11 @@
 #ifndef COMP_UNIT_H
 #define COMP_UNIT_H
 
-#include "type.h"
+#include <stdint.h>
 
 struct compilation_unit {
 	const char* path;
-	u64 length;
+	uint64_t length;
 	char* contents;
 };
 

@@ -1,8 +1,6 @@
 #ifndef VIRTUAL_THREAD_H
 #define VIRTUAL_THREAD_H
 
-#include "type.h"
-
 #define KILOBYTE 1000
 #define MEGABYTE (KILOBYTE * KILOBYTE)
 
@@ -14,8 +12,8 @@ struct stack_frame;
 struct virtual_thread {
 	struct stack_frame* curr_frame;
 	uint8_t globals[DATASEGMENT_SIZE];
-	u64 sp;
-	u64 pc;
+	uint64_t sp;
+	uint64_t pc;
 };
 
 struct stack_frame* 

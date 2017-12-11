@@ -1,7 +1,7 @@
 #ifndef STACK_FRAME_H
 #define STACK_FRAME_H
 
-#include "type.h"
+#include <stdint.h>
 
 #define LOCAL_MEMORY_SIZE 1024
 
@@ -11,9 +11,9 @@ struct stack_frame {
 	struct virtual_thread* parent_thread;
 	struct stack_frame* parent;
 
-	u8 locals[LOCAL_MEMORY_SIZE];
-	u64 local_index;
-	u64 return_addr;
+	uint8_t locals[LOCAL_MEMORY_SIZE];
+	uint64_t local_index;
+	uint64_t return_addr;
 };
 
 #endif

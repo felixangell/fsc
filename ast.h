@@ -3,8 +3,6 @@
 
 #include <collectc/array.h>
 
-#include "type.h"
-
 struct type {
 	int kind;
 	union {

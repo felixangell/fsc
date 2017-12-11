@@ -1,10 +1,10 @@
 #ifndef INSTR_H
 #define INSTR_H
 
-#include "type.h"
+#include <stdint.h>
 
 struct jjvm_instruction {
-	u64 id;
+	uint64_t id;
 };
 
 #endif

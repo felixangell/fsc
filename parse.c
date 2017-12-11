@@ -189,6 +189,8 @@ is_type(struct token* t) {
 		"typeof", "union", "unsigned", "void", "volatile",
 	};
 	
+	#define array_len(x) (sizeof(x) / sizeof(x[0]))
+
 	static HashSet* types_table;
 	if (types_table == NULL) {
 		hashset_new(&types_table);

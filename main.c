@@ -110,7 +110,7 @@ main(int argc, char** argv) {
 	// first we run lex/parse on all files
 
 	Array* TOKEN_STREAMS[num_units];
-	u64 program_loc = 0;
+	uint64_t program_loc = 0;
 
 	printf("Lexical Analysis on %d compilation unit(s)\n", num_units);
 	for (int i = 0; i < num_units; i++) {

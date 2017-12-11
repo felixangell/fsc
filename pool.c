@@ -35,7 +35,7 @@ push_block(struct data_pool* pool) {
 }
 
 struct data_pool* 
-make_pool(u64 page_size) {
+make_pool(uint64_t page_size) {
     // we only need to allocate this once
     // this is for keeping track of all pools
     // that are created. they are freed at the
@@ -72,7 +72,7 @@ alloc(struct data_pool* pool, size_t len) {
 
 void 
 destroy_pool(struct data_pool* pool) {
-    for (u64 i = 0; i < array_size(pool->blocks); i++) {
+    for (uint64_t i = 0; i < array_size(pool->blocks); i++) {
         struct block* block;
         array_get_at(pool->blocks, i, (void*) &block);
         free(block->data);
