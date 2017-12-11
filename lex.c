@@ -311,6 +311,50 @@ struct token_location capture_location(struct lexer* lex) {
 	};
 }
 
+static struct token* 
+recognized_other(struct lexer* lex) {
+	char current = peek(lex);
+	switch (current) {
+		case '/': {
+			if (peek_at(lex, 1) == '/') {
+				skip_line(lex);
+				return NULL;
+			}
+			return recognize_symbol(lex);
+		}
+		case '"': {
+			return recognize_string(lex);
+		}
+		case '\'': {
+			return recognize_character(lex);
+		}
+		case '[': case ']': case '(': case ')': case '{': case '}':
+		case '.': case '&': case '*': case '+': case '-': case '~':
+		case '!': case '%': case '<': case '>': case '^':
+		case '|': case '?': case ':': case ';': case '=':
+		case ',': {
+			return recognize_symbol(lex);
+		}
+		default: {
+			if (is_eof(lex)) 
+				return NULL;
+
+			// peeks ahead a 128 byte
+			// sample which is dumped as output
+			char sample[128];
+			memcpy(&sample, &lex->unit->contents[lex->pos], 96);
+
+			// NOTE: these are wrong when we take the pre-processed source
+			// code into account HM!
+			fprintf(stderr, "error: %s %d:%d, illegal character '%c', '%d':\n-> %s\n", 
+			lex->unit->path, (int) lex->row, (int) lex->col, current, (int) current, sample);
+
+			// how can we recover from this error?
+			exit(1);
+		}
+	}
+}
+
 struct lexer_info
 tokenize(struct lexer* lex, struct compilation_unit* unit) {
 	Array* tokens;
@@ -345,58 +389,20 @@ tokenize(struct lexer* lex, struct compilation_unit* unit) {
 			recognized_token = recognize_number(lex);
 		}
 		else {
-			switch (current) {
-				case '/': {
-					if (peek_at(lex, 1) == '/')
-						skip_line(lex);
-					else	
-						recognized_token = recognize_symbol(lex);
-					break;
-				}
-				case '"': {
-					recognized_token = recognize_string(lex);
-					break;
-				}
-				case '\'': {
-					recognized_token = recognize_character(lex);
-					break;
-				}
-				case '[': case ']': case '(': case ')': case '{': case '}':
-				case '.': case '&': case '*': case '+': case '-': case '~':
-				case '!': case '%': case '<': case '>': case '^':
-				case '|': case '?': case ':': case ';': case '=':
-				case ',': {
-					recognized_token = recognize_symbol(lex);
-					break;
-				}
-				default: {
-					if (is_eof(lex)) 
-						break;
+			recognized_token = recognized_other(lex);
+		}
 
-					char sample[128];
-					memcpy(&sample, &lex->unit->contents[lex->pos], 96);
+		if (recognized_token != NULL) {
+			start_loc.col -= pad;
+			struct token_location end_loc = capture_location(lex);
+			end_loc.col -= pad;
 
-					// NOTE: these are wrong when we take the pre-processed source
-					// code into account HM!
-					fprintf(stderr, "error: %s %d:%d, illegal character '%c', '%d':\n-> %s\n", 
-					lex->unit->path, (int) lex->row, (int) lex->col, current, (int) current, sample);
-					exit(1);  
-					break;
-				}
+			recognized_token->pos = (struct token_span) {
+				.start = start_loc,
+				.end = end_loc,
+			};
 
-				if (recognized_token != NULL) {
-					start_loc.col -= pad;
-					struct token_location end_loc = capture_location(lex);
-					end_loc.col -= pad;
-
-					recognized_token->pos = (struct token_span) {
-						.start = start_loc,
-						.end = end_loc,
-					};
-
-					array_add(tokens, recognized_token);
-				}
-			}
+			array_add(tokens, recognized_token);
 		}
 	}
 
