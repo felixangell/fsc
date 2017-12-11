@@ -17,7 +17,8 @@ struct data_pool {
     u64 page_size;
 };
 
-void cleanup_pools();
+void 
+cleanup_pools();
 
 struct data_pool* 
 make_pool(u64 capacity);

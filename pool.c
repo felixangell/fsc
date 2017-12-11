@@ -5,7 +5,8 @@
 
 static Array* ALLOCATED_POOLS;
 
-void cleanup_pools() {
+void 
+cleanup_pools() {
     if (ALLOCATED_POOLS == NULL) return;
 
     for (int i = 0; i < array_size(ALLOCATED_POOLS); i++) {
@@ -16,7 +17,8 @@ void cleanup_pools() {
     array_destroy(ALLOCATED_POOLS);
 }
 
-static void push_block(struct data_pool* pool) {
+static void 
+push_block(struct data_pool* pool) {
     struct block* b = malloc(sizeof(*b));
     assert(b != NULL);
 
@@ -50,7 +52,8 @@ make_pool(u64 page_size) {
     return pool;
 }
 
-static inline int align(int n, int m) {
+static inline int 
+align(int n, int m) {
     int rem = n % m;
     return (rem == 0) ? n : n - rem + m;
 }

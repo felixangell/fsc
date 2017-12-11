@@ -202,7 +202,8 @@ is_type(struct token* t) {
 	return hashset_contains(types_table, token_lexeme);
 }
 
-static void parse_decl_spec(struct type* base_type) {
+static void 
+parse_decl_spec(struct type* base_type) {
 
 }
 
@@ -241,7 +242,8 @@ static void parse_decl_spec(struct type* base_type) {
 		function_spec declaration_spec;
 
 */
-static void parse_decl() {
+static void 
+parse_decl() {
 	struct type base_type;
 	parse_decl_spec(&base_type);
 
