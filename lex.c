@@ -223,15 +223,32 @@ recognize_symbol(struct lexer* lex) {
 	return tok;
 }
 
-static inline bool 
-is_not_string_closer(char c) {
-	return (c != '"');
-}
-
 static struct token* 
 recognize_string(struct lexer* lex) {
 	expect(lex, '"');
-	struct token* str_tok = consume_while(lex, is_not_string_closer);
+
+	uint64_t initial = lex->pos;
+
+	{
+		while (!is_eof(lex)) {
+			if (peek(lex) == '"') {
+				break;
+			}
+
+			// FIXME properly handle escape characters.
+			if (peek(lex) == '\\') {
+				consume(lex);
+				consume(lex);
+			} else {
+				consume(lex);
+			}
+		}
+	}
+
+	struct token* str_tok = malloc(sizeof(*str_tok));
+	str_tok->lexeme = &lex->unit->contents[initial];
+	str_tok->length = lex->pos - initial;
+
 	expect(lex, '"');
 	str_tok->type = T_STRING;
 	return str_tok;
@@ -362,7 +379,7 @@ tokenize(struct lexer* lex, struct compilation_unit* unit) {
 					// NOTE: these are wrong when we take the pre-processed source
 					// code into account HM!
 					fprintf(stderr, "error: %s %d:%d, illegal character '%c', '%d':\n-> %s\n", 
-					lex->unit->path, (int) lex->col, (int) lex->row, current, (int) current, sample);
+					lex->unit->path, (int) lex->row, (int) lex->col, current, (int) current, sample);
 					exit(1);  
 					break;
 				}

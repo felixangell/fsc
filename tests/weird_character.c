@@ -1,0 +1,1 @@
+(__builtin_expect(!(0 && "oh fuck"), 0) ? __assert_rtn(__func__, "pool.c", 27, "0 && \"oh fuck\"") : (void)0);
