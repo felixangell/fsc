@@ -151,6 +151,7 @@ main(int argc, char** argv) {
 
 	long long end_time = curr_time_ms();
 	int time_taken_ms = end_time - start_time;
+
 	printf("compiled %zd/LOC in %d/ms\n", program_loc, time_taken_ms);
 
 	return 0;
