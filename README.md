@@ -1,5 +1,5 @@
 # fsc
-lazy c compiler that needs a name change
+felix's stupid (c) compiler 
 
 # notes
 there are a few memory leaks, mostly one time allocations that are
