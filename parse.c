@@ -188,6 +188,7 @@ is_type(struct token* t) {
 		"short", "signed", "static", "struct", "typedef",
 		"typeof", "union", "unsigned", "void", "volatile",
 	};
+	
 	static HashSet* types_table;
 	if (types_table == NULL) {
 		hashset_new(&types_table);

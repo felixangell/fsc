@@ -1,8 +1,34 @@
-# lcc
+# fsc
 lazy c compiler that needs a name change
 
+# notes
+there are a few memory leaks, mostly one time allocations that are
+never cleaned up. this is somewhat lazyness, and somewhat a design decision
+as compilers are (hopefully) short lived programs and the memory will be freed up anyway 
+by the operating system
+
+this compiler is not compliant to any c standard, nor will it be. its mostly written
+with referral to the c99 and c11 specs. 
+
+the main goal here is to produce a compiler that can compile itself
+
+the compiler does not compile natively into machine code, it will compile into
+bytecode for a virtual machine (jjvm), this is mostly to keep things cross platform
+so i can get the same result on windows, linux, and macOS. perhaps one day i 
+will implement a backend to gen x64 asm?
+
+there are little to no semantic checks, the compiler mostly assumes that the code
+given to it is error free. this may change in the future, but first the frontend and the codegen
+is all i care about.
+
+there are no optimisations, though this is something i want to experiment with
+
+the compiler uses an existing pre-processor via `cc -E`. this aspect of the
+compiler is very hacky! perhaps ill try implement my own pre-processor in the future
+but this isn't my interest right now
+
 # building
-to build lcc you need:
+to build fsc you need:
 
 * C compiler (clang, gcc, ...)
 * GNU Make

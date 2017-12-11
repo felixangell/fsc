@@ -1,6 +1,6 @@
 src = $(wildcard *.c)
 obj = $(patsubst %.c,%.o,$(src))
-out := lcc
+out := fsc
 
 CCFLAGS = -Wall -Wextra -g3 -std=c99
 LDFLAGS = -lcollectc

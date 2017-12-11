@@ -5,7 +5,7 @@ bin/
 obj/
 *.o
 *.ppc
-lcc
+fsc
 
 *.dll
 *.7z
