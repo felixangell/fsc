@@ -110,6 +110,7 @@ main(int argc, char** argv) {
 	// first we run lex/parse on all files
 
 	Array* TOKEN_STREAMS[num_units];
+	u64 program_loc = 0;
 
 	printf("Lexical Analysis on %d compilation unit(s)\n", num_units);
 	for (int i = 0; i < num_units; i++) {
@@ -122,7 +123,9 @@ main(int argc, char** argv) {
 		read_comp_unit(current_unit);
 
 		struct lexer lex_inst = {0};
-		TOKEN_STREAMS[i] = tokenize(&lex_inst, current_unit);
+		struct lexer_info lex = tokenize(&lex_inst, current_unit);;
+		TOKEN_STREAMS[i] = lex.token_stream;
+		program_loc += lex.lines_lexed;
 
 		if (DUMP_TOK_STREAM) {
 			for (int i = 0; i < array_size(TOKEN_STREAMS[i]); i++) {
@@ -148,7 +151,7 @@ main(int argc, char** argv) {
 
 	long long end_time = curr_time_ms();
 	int time_taken_ms = end_time - start_time;
-	printf("compiled in %d/ms\n", time_taken_ms);
+	printf("compiled %zd/LOC in %d/ms\n", program_loc, time_taken_ms);
 
 	return 0;
 }

@@ -88,7 +88,7 @@ is_eof(struct lexer* lex) {
 
 static struct token* 
 consume_while(struct lexer* lex, bool (*predicate)(char)) {
-	uint64_t initial = lex->pos;
+	u64 initial = lex->pos;
 	while (!is_eof(lex) && predicate(peek(lex))) {
 		consume(lex);
 	}
@@ -181,7 +181,7 @@ skip_layout(struct lexer* lex) {
 
 static struct token* 
 consume_amount(struct lexer* lex, int offs) {
-	uint64_t initial = lex->pos;
+	u64 initial = lex->pos;
 	for (int i = 0; i < offs; i++) {
 		consume(lex);
 	}
@@ -227,7 +227,7 @@ static struct token*
 recognize_string(struct lexer* lex) {
 	expect(lex, '"');
 
-	uint64_t initial = lex->pos;
+	u64 initial = lex->pos;
 
 	{
 		while (!is_eof(lex)) {
@@ -263,7 +263,7 @@ static struct token*
 recognize_character(struct lexer* lex) {
 	expect(lex, '\'');
 
-	uint64_t initial = lex->pos;
+	u64 initial = lex->pos;
 
 	{
 		while (!is_eof(lex)) {
@@ -311,7 +311,7 @@ struct token_location capture_location(struct lexer* lex) {
 	};
 }
 
-Array* 
+struct lexer_info
 tokenize(struct lexer* lex, struct compilation_unit* unit) {
 	Array* tokens;
 	array_new(&tokens);
@@ -399,5 +399,9 @@ tokenize(struct lexer* lex, struct compilation_unit* unit) {
 			}
 		}
 	}
-	return tokens;
+
+	return (struct lexer_info) {
+		.token_stream = tokens,
+		.lines_lexed = lex->row,
+	};
 }

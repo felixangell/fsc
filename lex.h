@@ -13,7 +13,14 @@ struct lexer {
 	u64 pos;
 };
 
-Array* 
+struct lexer_info {
+	Array* token_stream;
+
+	// diagnostic information
+	u64 lines_lexed;
+};
+
+struct lexer_info
 tokenize(struct lexer* lex, struct compilation_unit* unit);
 
 #endif
