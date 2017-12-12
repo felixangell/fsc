@@ -142,7 +142,15 @@ main(int argc, char** argv) {
 	{
 		for (int i = 0; i < num_units; i++) {
 			struct compilation_unit* unit = &units[i];
-			array_destroy(TOKEN_STREAMS[i]);
+
+			Array* token_set = TOKEN_STREAMS[i];
+			for (size_t j = 0; j < array_size(token_set); j++) {
+				struct token* tok;
+				array_get_at(token_set, j, (void*) &tok);
+				free(tok);
+			}
+			array_destroy(token_set);
+
 			free(unit->contents);
 		}
 	}

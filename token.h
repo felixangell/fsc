@@ -27,7 +27,7 @@ struct token {
 };
 
 bool 
-cmp_lexeme(struct token* tok, const char* val);
+cmp_lexeme(struct token* tok, struct token* other_tok);
 
 void
 print_tok(struct token* tok);

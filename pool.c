@@ -52,7 +52,7 @@ make_pool(uint64_t page_size) {
     return pool;
 }
 
-static inline int 
+static int 
 align(int n, int m) {
     int rem = n % m;
     return (rem == 0) ? n : n - rem + m;

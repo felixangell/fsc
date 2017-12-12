@@ -16,22 +16,12 @@
 
 static bool
 has_prefix(const char* str, const char* what) {
-	for (size_t i = 0; i < strlen(what); i++) {
-		if (str[i] != what[i]) {
-			return false;
-		}
-	}
-	return true;
+	return !strncmp(str, what, strlen(what));
 }
 
 bool 
-cmp_lexeme(struct token* tok, const char* val) {
-	for (uint64_t i = 0; i < tok->length; i++) {
-		if (tok->lexeme[i] != val[i]) {
-			return false;
-		}
-	}
-	return true;
+cmp_lexeme(struct token* tok, struct token* other_tok) {
+	return !strncmp(tok->lexeme, other_tok->lexeme, tok->length);
 }
 
 bool 
@@ -41,7 +31,7 @@ cmp_type(struct token* tok, int type) {
 
 bool 
 cmp_tok(struct token* tok, struct token* other) {
-	return cmp_lexeme(tok, other->lexeme) && cmp_type(tok, other->type);
+	return cmp_lexeme(tok, other) && cmp_type(tok, other->type);
 }
 
 void
@@ -55,19 +45,15 @@ print_tok(struct token* tok) {
 	};
 
 	#define TAB "    "
-
-	char lexeme[tok->length + 1];
-	memset(lexeme, 0, tok->length + 1);
-	memcpy(lexeme, tok->lexeme, tok->length);
-	printf(TAB "'%s', %s\n", lexeme, token_types[tok->type]);
+	printf(TAB "'%.*s', %s\n", (int) tok->length, tok->lexeme, token_types[tok->type]);
 }
 
-static inline char 
+static char 
 peek(struct lexer* lex) {
 	return lex->unit->contents[lex->pos];
 }
 
-static inline char 
+static char 
 peek_at(struct lexer* lex, int offs) {
 	return lex->unit->contents[lex->pos + offs];
 }
@@ -84,7 +70,7 @@ consume(struct lexer* lex) {
 	return curr;
 }
 
-static inline bool 
+static bool 
 is_eof(struct lexer* lex) {
 	return lex->pos >= lex->unit->length;
 }
@@ -111,7 +97,7 @@ expect(struct lexer* lex, char c) {
 	assert(0);
 }
 
-static inline bool 
+static bool 
 is_identifier(char c) {
 	return isalnum(c) || c == '_';
 }
@@ -121,7 +107,7 @@ char* RESERVED_KEYWORDS[] = {
 	"for","goto","if","inline","int","long","register","restrict","return","short","signed","sizeof","static",
 	"struct","switch","typedef","union","unsigned","void","volatile","while","_Bool","_Complex","_Imaginary"
 };
-static inline bool is_reserved_keyword(char* keyword) {
+static bool is_reserved_keyword(char* keyword) {
 	static HashSet* keyword_set = NULL;
 
 	// we should only do this once
@@ -154,7 +140,7 @@ recognize_identifier(struct lexer* lex) {
 	return tok;
 }
 
-static inline bool 
+static bool 
 is_number(char c) {
 	return (c >= '0' && c <= '9');
 }
@@ -172,7 +158,7 @@ recognize_number(struct lexer* lex) {
 	return number;
 }
 
-static inline bool 
+static bool 
 is_layout(char c) {
 	return (c <= ' ');
 }
@@ -194,7 +180,7 @@ consume_amount(struct lexer* lex, int offs) {
 	return tok;
 }
 
-static inline int 
+static int 
 get_symbol_size(struct lexer* lex) {
 	static const char* keywords[] = {
 		"<<=", ">>=", "...",
@@ -257,7 +243,7 @@ recognize_string(struct lexer* lex) {
 	return str_tok;
 }
 
-static inline bool 
+static bool 
 is_not_char_closer(char c) {
 	return c != '\'';
 }
@@ -301,7 +287,7 @@ skip_line(struct lexer* lex) {
 	expect(lex, '\n');
 }
 
-static inline int align(int n, int m) {
+static int align(int n, int m) {
     int rem = n % m;
     return (rem == 0) ? n : n - rem + m;
 }

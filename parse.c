@@ -157,7 +157,7 @@ peek(struct parser* p, int offs) {
 	return t;
 }
 
-static inline struct token*
+static struct token*
 next(struct parser* p) {
 	return peek(p, 0);
 }
@@ -169,16 +169,17 @@ consume(struct parser* p) {
 	return t;
 }
 
-static inline struct token*
+static struct token*
 expect_lexeme(struct parser* p, const char* lexeme) {
-	if (cmp_lexeme(next(p), lexeme)) {
+	const struct token* next_tok = next(p);
+	if (!strncmp(next_tok->lexeme, lexeme, next_tok->length)) {
 		return consume(p);
 	}
 	printf("error: expected '%s'\n", lexeme);
 	return NULL;
 }
 
-static inline bool
+static bool
 is_type(struct token* t) {
 	static char* TYPES[] = {
 		"_Alignas", "auto", "_Bool", "char",
