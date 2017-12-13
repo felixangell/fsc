@@ -50,16 +50,19 @@ enum {
 	CMPL,
 };
 
-void 
-execute_instructions(struct jjvm_inst* inst, Array* instrs) {
-	struct virtual_thread* curr = inst->curr_thrd;
+static void
+execute(struct jjvm_instruction* instr) {
+	switch (instr->id) {
 
+	}
+}
+
+void 
+run_jjvm_program(struct jjvm_inst* jjvm, Array* instrs) {
+	struct virtual_thread* curr = jjvm->curr_thrd;
 	while (curr->pc < array_size(instrs)) {
 		struct jjvm_instruction* instr;
 		array_get_at(instrs, curr->pc++, (void*) &instr);
-
-		switch (instr->id) {
-			// TODO:
-		}
+		execute(instr);
 	}
 }

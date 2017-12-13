@@ -2,10 +2,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <collectc/hashset.h>
+#include <assert.h>
 
 #include "ast.h"
 #include "parse.h"
 #include "token.h"
+#include "grammar.h"
 
 /*
 	https://cs.wmich.edu/~gupta/teaching/cs4850/sumII06/The%20syntax%20of%20C%20in%20Backus-Naur%20form.htm
@@ -245,21 +247,60 @@ parse_decl_spec(struct type* base_type) {
 		function_spec declaration_spec;
 
 */
-static void 
-parse_decl() {
-	struct type base_type;
-	parse_decl_spec(&base_type);
 
-	for (;;) {
-		
+static bool 
+parse_decl(struct parser* p, struct ast_node* node) {
+	assert(node != NULL);
+
+	struct token* tok = next(p);
+
+	// technically this assumption holds well because
+	// keywords are guaranteed to be no longer than
+	// 512 characters!
+	// -
+	// we need to convert the lexeme into a null
+	// terminated string for it to be validly looked up
+	// in the hash set.	
+	char keyword[512] = {0};
+	memcpy(keyword, tok->lexeme, tok->length);
+
+	node->kind = AST_DECL_SPEC;
+	if (is_type_qualifier(keyword)) {
+		node->decl_spec = (struct decl_spec) {
+			.t = consume(p),
+			.type = DS_TYPE_QUALIFIER,
+		};
+		return true;
+	} else if (is_type_specifier(keyword)) {
+		node->decl_spec = (struct decl_spec) {
+			.t = consume(p),
+			.type = DS_TYPE_SPECIFIER,
+		};
+		return true;
+	} else if (is_storage_class_specifier(keyword)) {
+		node->decl_spec = (struct decl_spec) {
+			.t = consume(p),
+			.type = DS_STORAGE_CLASS,
+		};
+		return true;
 	}
+
+	printf("not a decl!\n");
+	return false;
 }
 
 static struct ast_node*
 parse_node(struct parser* p) {
-	for (;;) {
-
+	// this is kind of annoying because
+	// we have to do this check multiple times
+	struct ast_node* node = malloc(sizeof(*node));
+	if (!parse_decl(p, node)) {
+		return node;
 	}
+
+	printf("what just happened?!\n");
+	print_tok(next(p));
+	exit(1);
 	return NULL;
 }
 
@@ -269,10 +310,6 @@ parse(Array* tokens) {
 		.tokens = tokens,
 		.pos = 0,
 	};
-
-	if ((void*)1 == (void*)1) {
-		return NULL;
-	}
 
 	// maybe measure and make
 	// this a reasonable assumption

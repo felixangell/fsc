@@ -13,7 +13,7 @@ default: $(out)
 	$(CC) -c $< -o $@
 
 $(out): $(obj)
-	$(CC) $(LDFLAGS) $(obj) -o $@
+	time $(CC) $(LDFLAGS) $(obj) -o $@
 
 self: $(out)
 	./$(out) $(src)

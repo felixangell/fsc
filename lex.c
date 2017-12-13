@@ -14,6 +14,91 @@
 
 #define array_len(x) (sizeof(x) / sizeof(x[0]))
 
+#include "grammar.h"
+
+// GRAMMAR STUFF
+
+bool is_reserved_keyword(const char* keyword) {
+	static HashSet* keyword_set = NULL;
+
+	static char* RESERVED_KEYWORDS[] = {
+		"auto","break","case","char","const","continue","default","do","double","else","enum","extern","float",
+		"for","goto","if","inline","int","long","register","restrict","return","short","signed","sizeof","static",
+		"struct","switch","typedef","union","unsigned","void","volatile","while","_Bool","_Complex","_Imaginary"
+	};
+
+	// TODO: we should probably free these all
+	// but it really isnt necessary as the OS
+	// should clean up most of it anyways
+	
+	// we should only do this once
+	if (keyword_set == NULL) {
+		hashset_new(&keyword_set);
+		for (int i = 0; i < array_len(RESERVED_KEYWORDS); i++) {
+			hashset_add(keyword_set, RESERVED_KEYWORDS[i]);
+		}		
+	}
+
+	return hashset_contains(keyword_set, (void*) keyword);
+}
+
+// there are only two type qualifiers
+// right now so i feel that using a hashset
+// here is a bit overkill
+bool is_type_qualifier(const char* str) {
+	char fst = str[0];
+	if (fst == 'c') {
+		return !strcmp(str, "const");
+	} else if (fst == 'v') {
+		return !strcmp(str, "volatile");
+	}
+
+	return false;
+}
+
+bool is_storage_class_specifier(const char* str) {
+	static HashSet* storage_specifier_set = NULL;
+
+	static char* STORAGE_CLASS_SPECIFIER[] = {
+		"auto", "register", "static", "extern", "typedef"
+	};
+
+	// we should only do this once
+	// TODO: we should probably free these all
+	// but it really isnt necessary as the OS
+	// should clean up most of it anyways
+	if (storage_specifier_set == NULL) {
+		hashset_new(&storage_specifier_set);
+		for (int i = 0; i < array_len(STORAGE_CLASS_SPECIFIER); i++) {
+			hashset_add(storage_specifier_set, STORAGE_CLASS_SPECIFIER[i]);
+		}		
+	}
+
+	return hashset_contains(storage_specifier_set, str);
+}
+
+bool is_type_specifier(const char* str) {
+	static HashSet* type_specifier_set = NULL;
+
+	static char* TYPE_SPECIFIERS[] = {
+		"void", "char", "short", "int", "long", "float",
+		"double", "signed", "unsigned",
+	};
+
+	// we should only do this once
+	// TODO: we should probably free these all
+	// but it really isnt necessary as the OS
+	// should clean up most of it anyways
+	if (type_specifier_set == NULL) {
+		hashset_new(&type_specifier_set);
+		for (int i = 0; i < array_len(TYPE_SPECIFIERS); i++) {
+			hashset_add(type_specifier_set, TYPE_SPECIFIERS[i]);
+		}		
+	}
+
+	return hashset_contains(type_specifier_set, str);
+}
+
 static bool
 has_prefix(const char* str, const char* what) {
 	return !strncmp(str, what, strlen(what));
@@ -100,28 +185,6 @@ expect(struct lexer* lex, char c) {
 static bool 
 is_identifier(char c) {
 	return isalnum(c) || c == '_';
-}
-
-char* RESERVED_KEYWORDS[] = {
-	"auto","break","case","char","const","continue","default","do","double","else","enum","extern","float",
-	"for","goto","if","inline","int","long","register","restrict","return","short","signed","sizeof","static",
-	"struct","switch","typedef","union","unsigned","void","volatile","while","_Bool","_Complex","_Imaginary"
-};
-static bool is_reserved_keyword(char* keyword) {
-	static HashSet* keyword_set = NULL;
-
-	// we should only do this once
-	// TODO: we should probably free these all
-	// but it really isnt necessary as the OS
-	// should clean up most of it anyways
-	if (keyword_set == NULL) {
-		hashset_new(&keyword_set);
-		for (int i = 0; i < array_len(RESERVED_KEYWORDS); i++) {
-			hashset_add(keyword_set, RESERVED_KEYWORDS[i]);
-		}		
-	}
-
-	return hashset_contains(keyword_set, keyword);
 }
 
 static struct token* 

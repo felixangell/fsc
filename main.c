@@ -107,9 +107,11 @@ main(int argc, char** argv) {
 	}
 	putchar('\n');
 
-	// first we run lex/parse on all files
-
 	Array* TOKEN_STREAMS[num_units];
+	Array* AS_TREES[num_units];
+
+	// how many lines of code in the
+	// program we're compiling.
 	uint64_t program_loc = 0;
 
 	printf("Lexical Analysis on %d compilation unit(s)\n", num_units);
@@ -123,6 +125,7 @@ main(int argc, char** argv) {
 		read_comp_unit(current_unit);
 
 		struct lexer lex_inst = {0};
+		
 		struct lexer_info lex = tokenize(&lex_inst, current_unit);;
 		TOKEN_STREAMS[i] = lex.token_stream;
 		program_loc += lex.lines_lexed;
@@ -135,13 +138,21 @@ main(int argc, char** argv) {
 			}
 		}
 
-		parse(TOKEN_STREAMS[i]);
+		AS_TREES[i] = parse(TOKEN_STREAMS[i]);
 	}
 
 	// cleanup stuff
 	{
 		for (int i = 0; i < num_units; i++) {
 			struct compilation_unit* unit = &units[i];
+
+			Array* as_tree = AS_TREES[i];
+			for (size_t j = 0; j < array_size(as_tree); j++) {
+				struct ast_node* node;
+				array_get_at(as_tree, j, (void*) &node);
+				free(node);
+			}
+			array_destroy(as_tree);
 
 			Array* token_set = TOKEN_STREAMS[i];
 			for (size_t j = 0; j < array_size(token_set); j++) {
@@ -155,6 +166,8 @@ main(int argc, char** argv) {
 		}
 	}
 
+	// even if no pools are created
+	// this function still executes
 	cleanup_pools();
 
 	long long end_time = curr_time_ms();
