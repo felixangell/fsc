@@ -207,11 +207,6 @@ is_type(struct token* t) {
 	return hashset_contains(types_table, token_lexeme);
 }
 
-static void 
-parse_decl_spec(struct type* base_type) {
-
-}
-
 /*
 	storage_class_spec = 
 		typedef
@@ -248,6 +243,35 @@ parse_decl_spec(struct type* base_type) {
 
 */
 
+// notes:
+// at least one type specifier
+// at most one storage-class-specifier
+// 
+
+static Array*
+parse_decl_spec(struct parser* p) {
+	Array* decl_spec;
+	for (;;) {
+		struct decl_spec
+		if (is_type_qualifier(keyword)) {
+			struct decl_spec decl = {
+				.t = consume(p),
+				.type = DS_TYPE_QUALIFIER,
+			};
+		} else if (is_type_specifier(keyword)) {
+			node->decl_spec = (struct decl_spec) {
+				.t = consume(p),
+				.type = DS_TYPE_SPECIFIER,
+			};
+		} else if (is_storage_class_specifier(keyword)) {
+			node->decl_spec = (struct decl_spec) {
+				.t = consume(p),
+				.type = DS_STORAGE_CLASS,
+			};
+		}
+	}
+}
+
 static bool 
 parse_decl(struct parser* p, struct ast_node* node) {
 	assert(node != NULL);
@@ -265,25 +289,6 @@ parse_decl(struct parser* p, struct ast_node* node) {
 	memcpy(keyword, tok->lexeme, tok->length);
 
 	node->kind = AST_DECL_SPEC;
-	if (is_type_qualifier(keyword)) {
-		node->decl_spec = (struct decl_spec) {
-			.t = consume(p),
-			.type = DS_TYPE_QUALIFIER,
-		};
-		return true;
-	} else if (is_type_specifier(keyword)) {
-		node->decl_spec = (struct decl_spec) {
-			.t = consume(p),
-			.type = DS_TYPE_SPECIFIER,
-		};
-		return true;
-	} else if (is_storage_class_specifier(keyword)) {
-		node->decl_spec = (struct decl_spec) {
-			.t = consume(p),
-			.type = DS_STORAGE_CLASS,
-		};
-		return true;
-	}
 
 	printf("not a decl!\n");
 	return false;
