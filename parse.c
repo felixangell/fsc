@@ -248,27 +248,31 @@ is_type(struct token* t) {
 // at most one storage-class-specifier
 // 
 
-static Array*
-parse_decl_spec(struct parser* p) {
-	Array* decl_spec;
-	for (;;) {
-		struct decl_spec
+static void
+parse_decl_spec(struct parser* p, struct decl_spec* specs) {
+	char keyword[512] = {0};
+
+	for (int i = 0;;i++) {
+		struct token* tok = next(p);
+		memcpy(keyword, tok->lexeme, tok->length);
+		keyword[tok->length + 1] = 0;
+
+		struct decl_spec spec;
 		if (is_type_qualifier(keyword)) {
-			struct decl_spec decl = {
-				.t = consume(p),
-				.type = DS_TYPE_QUALIFIER,
-			};
+			printf("%s is a type qualifier!\n", keyword);
+			spec.type = DS_TYPE_QUALIFIER;
 		} else if (is_type_specifier(keyword)) {
-			node->decl_spec = (struct decl_spec) {
-				.t = consume(p),
-				.type = DS_TYPE_SPECIFIER,
-			};
+			printf("%s is a type specifier!\n", keyword);
+			spec.type = DS_TYPE_SPECIFIER;
 		} else if (is_storage_class_specifier(keyword)) {
-			node->decl_spec = (struct decl_spec) {
-				.t = consume(p),
-				.type = DS_STORAGE_CLASS,
-			};
+			printf("%s is a storage class specifier!\n", keyword);
+			spec.type = DS_STORAGE_CLASS;
+		} else {
+			return;
 		}
+
+		spec.t = consume(p);
+		*(specs + i) = spec;
 	}
 }
 
@@ -288,9 +292,17 @@ parse_decl(struct parser* p, struct ast_node* node) {
 	char keyword[512] = {0};
 	memcpy(keyword, tok->lexeme, tok->length);
 
-	node->kind = AST_DECL_SPEC;
+	// FIXME, dynamically allocate this?
+	// we have a limit of 32 specs at most here.
+	struct decl_spec specs[32] = {0};
+	parse_decl_spec(p, specs);
 
-	printf("not a decl!\n");
+	for (int i = 0; i < array_len(specs); i++) {
+		if (specs[i].t != NULL) {
+			print_tok(specs[i].t);
+		}
+	}
+
 	return false;
 }
 
@@ -300,6 +312,7 @@ parse_node(struct parser* p) {
 	// we have to do this check multiple times
 	struct ast_node* node = malloc(sizeof(*node));
 	if (!parse_decl(p, node)) {
+		node->kind = AST_DECL_SPEC;
 		return node;
 	}
 
