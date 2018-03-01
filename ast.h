@@ -1,7 +1,7 @@
 #ifndef AST_H
 #define AST_H
 
-#include <collectc/array.h>
+#include <stdbool.h>
 
 struct type;
 
@@ -21,6 +21,7 @@ enum node_type {
 		function_spec declaration_spec;
 	*/
 	AST_DECL_SPEC,
+	AST_FUNC_DEF,
 };
 
 struct ast_node {
@@ -36,7 +37,7 @@ struct type {
 	union {
 		struct type* ptr;
 		struct {
-			Array* fields;
+			struct array* fields;
 			int offset;
 			bool is_union; // false => it's a structure
 		} structure;
@@ -46,7 +47,7 @@ struct type {
 		} bit_field;
 		struct {
 			struct type* ret;
-			Array* params;
+			struct array* params;
 			bool variadic;
 			// old func style?
 		} function;

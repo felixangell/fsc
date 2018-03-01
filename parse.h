@@ -1,15 +1,16 @@
 #ifndef PARSE_H
 #define PARSE_H
 
-#include <collectc/array.h>
 #include <stdint.h>
+
+struct array;
 
 struct parser {
 	uint64_t pos;
-	Array* tokens;
+	struct array* tokens;
 };
 
-Array* 
-parse(Array* tokens);
+struct array* 
+parse(struct array* tokens);
 
 #endif

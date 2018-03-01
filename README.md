@@ -1,6 +1,9 @@
 # fsc
 felix's stupid (c) compiler 
 
+fsc is an attempt to compile some subset of C. this will probably not work on
+real world c programs. the main goal is to be able to compile _itself_
+
 # notes
 there are a few memory leaks, mostly one time allocations that are
 never cleaned up. this is somewhat lazyness, and somewhat a design decision
@@ -11,11 +14,6 @@ this compiler is not compliant to any c standard, nor will it be. its mostly wri
 with referral to the c99 and c11 specs. 
 
 the main goal here is to produce a compiler that can compile itself
-
-the compiler does not compile natively into machine code, it will compile into
-bytecode for a virtual machine (jjvm), this is mostly to keep things cross platform
-so i can get the same result on windows, linux, and macOS. perhaps one day i 
-will implement a backend to gen x64 asm?
 
 there are little to no semantic checks, the compiler mostly assumes that the code
 given to it is error free. this may change in the future, but first the frontend and the codegen

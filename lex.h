@@ -2,9 +2,9 @@
 #define LEX_H
 
 #include <stdint.h>
-#include <collectc/array.h>
 
 struct compilation_unit;
+struct array;
 
 struct lexer {
 	struct compilation_unit* unit;
@@ -13,7 +13,7 @@ struct lexer {
 };
 
 struct lexer_info {
-	Array* token_stream;
+	struct array* token_stream;
 
 	// diagnostic information
 	uint64_t lines_lexed;

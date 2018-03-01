@@ -1,3 +1,5 @@
+#include <stdio.h>
+
 const int main() {
 	int x = 15;
 	int y = x * 2;

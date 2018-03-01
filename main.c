@@ -4,11 +4,10 @@
 #include <stdbool.h>
 #include <sys/time.h>
 #include <unistd.h>
-#include <collectc/array.h>
 
+#include "array.h"
 #include "lex.h"
 #include "parse.h"
-#include "pool.h"
 #include "comp_unit.h"
 #include "token.h"
 
@@ -107,14 +106,14 @@ main(int argc, char** argv) {
 	}
 	putchar('\n');
 
-	Array* TOKEN_STREAMS[num_units];
-	Array* AS_TREES[num_units];
+	struct array* TOKEN_STREAMS[num_units];
+	struct array* AS_TREES[num_units];
 
 	// how many lines of code in the
 	// program we're compiling.
 	uint64_t program_loc = 0;
 
-	printf("Lexical Analysis on %d compilation unit(s)\n", num_units);
+	printf("Lex/parse on %d compilation unit(s)\n", num_units);
 	for (int i = 0; i < num_units; i++) {
 		struct compilation_unit* current_unit = &units[i];
 
@@ -131,12 +130,13 @@ main(int argc, char** argv) {
 		program_loc += lex.lines_lexed;
 
 		if (DUMP_TOK_STREAM) {
-			for (int i = 0; i < array_size(TOKEN_STREAMS[i]); i++) {
-				struct token* tok;
-				array_get_at(TOKEN_STREAMS[i], i, (void*) &tok);
+			for (int i = 0; i < TOKEN_STREAMS[i]->size; i++) {
+				struct token* tok = array_get(TOKEN_STREAMS[i], i);
 				print_tok(tok);
 			}
 		}
+
+		printf(" - Tokenized %llu lines of code\n", program_loc);
 
 		AS_TREES[i] = parse(TOKEN_STREAMS[i]);
 	}
@@ -146,29 +146,24 @@ main(int argc, char** argv) {
 		for (int i = 0; i < num_units; i++) {
 			struct compilation_unit* unit = &units[i];
 
-			Array* as_tree = AS_TREES[i];
-			for (size_t j = 0; j < array_size(as_tree); j++) {
-				struct ast_node* node;
-				array_get_at(as_tree, j, (void*) &node);
+			struct array* as_tree = AS_TREES[i];
+			for (size_t j = 0; j < as_tree->size; j++) {
+				struct ast_node* node = array_get(as_tree, j);
 				free(node);
 			}
-			array_destroy(as_tree);
+			destroy_array(as_tree);
 
-			Array* token_set = TOKEN_STREAMS[i];
-			for (size_t j = 0; j < array_size(token_set); j++) {
-				struct token* tok;
-				array_get_at(token_set, j, (void*) &tok);
+			struct array* token_set = TOKEN_STREAMS[i];
+			for (size_t j = 0; j < token_set->size; j++) {
+				struct token* tok = array_get(token_set, j);
 				free(tok);
 			}
-			array_destroy(token_set);
+			destroy_array(token_set);
 
 			free(unit->contents);
 		}
 	}
 
-	// even if no pools are created
-	// this function still executes
-	cleanup_pools();
 
 	long long end_time = curr_time_ms();
 	int time_taken_ms = end_time - start_time;

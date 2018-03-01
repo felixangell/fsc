@@ -3,7 +3,6 @@ obj = $(patsubst %.c,%.o,$(src))
 out := fsc
 
 CCFLAGS = -Wall -Wextra -g3 -std=c99
-LDFLAGS = -lcollectc
 
 print-%  : ; @echo $* = $($*)
 

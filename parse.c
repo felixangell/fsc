@@ -1,161 +1,17 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <collectc/hashset.h>
 #include <assert.h>
 
+#include "array.h"
 #include "ast.h"
 #include "parse.h"
 #include "token.h"
 #include "grammar.h"
 
-/*
-	https://cs.wmich.edu/~gupta/teaching/cs4850/sumII06/The%20syntax%20of%20C%20in%20Backus-Naur%20form.htm
-	http://www.open-std.org/jtc1/sc22/wg14/www/docs/n1570.pdf
-
-	primary_expr = 
-		identifier
-		constant
-		string-literal
-		( expr );
-
-	postfix_expr =
-		primary_expr
-		postfix_expr [ expr ]
-		postfix_expr ( arg_expr_list )
-		postfix_expr . identifier
-		postfix_expr -> identifier
-		postfix_expr ++
-		postfix_expr --
-		( type_name ) { initializer_list }
-		( type_name ) { initializer_list , };
-
-	arg_expr_list =
-		assignment_expr
-		arg_expr_list , assignment_expr;
-
-	unary_operator = & * - ~ !
-
-	multiplicative_expr =
-		cast_expr
-		multiplicative_expr * cast_expr
-		multiplicative_expr / cast_expr
-		multiplicative_expr % cast_expr;
-
-	additive_expr =
-		multiplicative_expr
-		additive_expr + multiplicative_expr
-		additive_expr - multiplicative_expr;
-
-	shift_expr =
-		additive_expr
-		shift_expr << additive_expr
-		shift_expr >> additive_expr;
-
-	relational_expr = 
-		shift_expr
-		relation_expr < shift_expr
-		relation_expr > shift_expr
-		relation_expr <= shift_expr
-		relation_expr >= shift_expr;
-
-	equality_expr =
-		relational_expr
-		equality_expr == relational_expr
-		equality_expr != relational_expr;
-
-	AND_expr =
-		equality_expr
-		AND_expr & equality_expr;
-
-	exclusive_OR_expr =
-		AND_expr
-		exclusive_OR_expr ^ AND_expr;
-
-	inclusive_OR_expr =
-		exclusive_OR_expr
-		inclusive_OR_expr | exclusive_OR_expr;
-
-	logical_AND_expr =
-		inclusive_OR_expr
-		logical_AND_expr && inclusive_OR_expr;
-
-	logical_OR_expr =
-		logical_AND_expr
-		logical_OR_expr || logical_AND_expr;
-
-	conditional_expr =
-		logical_OR_expr
-		logical_OR_expr ? expr : conditional_expr;
-
-	expr =
-		assignment_expr
-		expr , assignment_expr;
-
-	constant_expr = 
-		conditional_expr;
-
-	unary_expr = 
-		postfix_expr
-		++ unary_expr
-		-- unary_expr
-		unary_operator cast_expr
-		sizeof unary_expr
-		sizeof ( type_name );
-
-	declaration =
-		declaration_spec init_declarator_list;
-
-	storage_class_spec = 
-		typedef
-		extern
-		static
-		auto
-		register;
-
-	type_specifier =
-		void
-		char
-		short
-		int
-		long
-		float
-		double
-		signed
-		unsigned
-		_Bool
-		_Complex
-		struct_or_union_spec
-		enum_spec
-		typedef_name;
-
-	type_qualifier = 
-		const
-		atomic;
-
-	declaration_spec =
-		storage_class_spec declaration_spec,
-		type_specifier declaration_spec,
-		type_qualifer declaration_spec,
-		function_spec declaration_spec;
-
-	struct_or_union =
-		struct
-		union;
-
-	init_decl_list =
-		init_decl
-		init_decl_list , init_decl;
-
-	init_decl =
-		declarator
-		declarator = initializer;
-*/
-
 static struct token* 
 peek(struct parser* p, int offs) {
-	struct token* t;
-	array_get_at(p->tokens, p->pos + offs, (void*) &t);
+	struct token* t = array_get(p->tokens, p->pos + offs);
 	return t;
 }
 
@@ -191,62 +47,21 @@ is_type(struct token* t) {
 		"short", "signed", "static", "struct", "typedef",
 		"typeof", "union", "unsigned", "void", "volatile",
 	};
-	
+
+	char token_lexeme[t->length];
+	memset(&token_lexeme, 0, t->length);
+	memcpy(&token_lexeme, t->lexeme, t->length);
+
 	#define array_len(x) (sizeof(x) / sizeof(x[0]))
 
-	static HashSet* types_table;
-	if (types_table == NULL) {
-		hashset_new(&types_table);
-		for (int i = 0; i < array_len(TYPES); i++) {
-			hashset_add(types_table, TYPES[i]);
+	for (int i = 0; i < array_len(TYPES); i++) {
+		if (!strncmp(token_lexeme, TYPES[i], t->length)) {
+			return true;
 		}
 	}
 
-	char token_lexeme[t->length];
-	memcpy(&token_lexeme, t->lexeme, t->length);
-	return hashset_contains(types_table, token_lexeme);
+	return false;
 }
-
-/*
-	storage_class_spec = 
-		typedef
-		extern
-		static
-		auto
-		register;
-
-	type_specifier =
-		void
-		char
-		short
-		int
-		long
-		float
-		double
-		signed
-		unsigned
-		_Bool
-		_Complex
-		struct_or_union_spec
-		enum_spec
-		typedef_name;
-
-	type_qualifier = 
-		const
-		atomic;
-
-	declaration_spec =
-		storage_class_spec declaration_spec,
-		type_specifier declaration_spec,
-		type_qualifer declaration_spec,
-		function_spec declaration_spec;
-
-*/
-
-// notes:
-// at least one type specifier
-// at most one storage-class-specifier
-// 
 
 static void
 parse_decl_spec(struct parser* p, struct decl_spec* specs) {
@@ -306,12 +121,79 @@ parse_decl(struct parser* p, struct ast_node* node) {
 	return false;
 }
 
+// compare a token to the given string
+static bool
+scmp_token(struct token* t, char* str) {
+	return !strncmp(t->lexeme, str, t->length);
+}
+
+static bool
+has_next(struct parser* p) {
+	return p->pos < p->tokens->size;
+}
+
+static void
+skip_parens(struct parser* p) {
+	consume(p); // (
+	for (int i = 0; has_next(p) && !scmp_token(next(p), ")"); i++) {
+		consume(p);
+	}
+	consume(p); // )
+}
+
+static bool
+is_func_def(struct parser* p) {
+	uint64_t starting_pos = p->pos;
+
+	bool func_def = false;
+	for (;;) {
+		struct token* tok = next(p);
+
+		if (scmp_token(tok, ";")) {
+			break;
+		}
+
+		if (is_type(tok)) {
+			consume(p);
+			continue;
+		}
+
+		if (scmp_token(tok, "(")) {
+			skip_parens(p);
+			continue;
+		}
+
+		if (tok->type != T_IDENTIFIER) continue;
+
+		if (scmp_token(tok, "(")) {
+			continue;
+		}
+		skip_parens(p);
+
+		func_def = scmp_token(tok, "{") || is_type(next(p));
+		break;
+	}
+
+	p->pos = starting_pos;
+	return func_def;
+}
+
+static void 
+parse_func_def(struct parser* p, struct ast_node* node) {
+	printf("parsing func def!\n");
+}
+
 static struct ast_node*
 parse_node(struct parser* p) {
 	// this is kind of annoying because
 	// we have to do this check multiple times
 	struct ast_node* node = malloc(sizeof(*node));
-	if (!parse_decl(p, node)) {
+	if (is_func_def(p)) {
+		parse_func_def(p, node);
+		node->kind = AST_FUNC_DEF;
+		return node;
+	} else {
+		parse_decl(p, node);
 		node->kind = AST_DECL_SPEC;
 		return node;
 	}
@@ -322,8 +204,8 @@ parse_node(struct parser* p) {
 	return NULL;
 }
 
-Array* 
-parse(Array* tokens) {
+struct array* 
+parse(struct array* tokens) {
 	struct parser p = {
 		.tokens = tokens,
 		.pos = 0,
@@ -332,13 +214,14 @@ parse(Array* tokens) {
 	// maybe measure and make
 	// this a reasonable assumption
 	// but for now it'll do
-	Array* ast_nodes;
-	array_new(&ast_nodes);
-	while (p.pos < array_size(tokens)) {
+	struct array* ast_nodes = new_array(32);
+
+	while (p.pos < tokens->size) {
 		struct ast_node* node = parse_node(&p);
 		if (node != NULL) {
 			array_add(ast_nodes, node);
 		}
+		exit(0);
 	}
 
 	return ast_nodes;

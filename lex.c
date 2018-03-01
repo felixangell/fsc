@@ -3,11 +3,9 @@
 #include <stdbool.h>
 #include <ctype.h>
 #include <string.h>
-#include <collectc/array.h>
-#include <collectc/hashset.h>
 #include <assert.h>
 
-#include "pool.h"
+#include "array.h"
 #include "token.h"
 #include "lex.h"
 #include "comp_unit.h"
@@ -19,32 +17,21 @@
 // GRAMMAR STUFF
 
 bool is_reserved_keyword(const char* keyword) {
-	static HashSet* keyword_set = NULL;
-
 	static char* RESERVED_KEYWORDS[] = {
 		"auto","break","case","char","const","continue","default","do","double","else","enum","extern","float",
 		"for","goto","if","inline","int","long","register","restrict","return","short","signed","sizeof","static",
 		"struct","switch","typedef","union","unsigned","void","volatile","while","_Bool","_Complex","_Imaginary"
 	};
 
-	// TODO: we should probably free these all
-	// but it really isnt necessary as the OS
-	// should clean up most of it anyways
-	
-	// we should only do this once
-	if (keyword_set == NULL) {
-		hashset_new(&keyword_set);
-		for (int i = 0; i < array_len(RESERVED_KEYWORDS); i++) {
-			hashset_add(keyword_set, RESERVED_KEYWORDS[i]);
-		}		
+	for (size_t i = 0; i < array_len(RESERVED_KEYWORDS); i++) {
+		if (!strncmp(keyword, RESERVED_KEYWORDS[i], strlen(keyword))) {
+			return true;
+		}
 	}
 
-	return hashset_contains(keyword_set, (void*) keyword);
+	return false;
 }
 
-// there are only two type qualifiers
-// right now so i feel that using a hashset
-// here is a bit overkill
 bool is_type_qualifier(const char* str) {
 	char fst = str[0];
 	if (fst == 'c') {
@@ -57,46 +44,32 @@ bool is_type_qualifier(const char* str) {
 }
 
 bool is_storage_class_specifier(const char* str) {
-	static HashSet* storage_specifier_set = NULL;
-
 	static char* STORAGE_CLASS_SPECIFIER[] = {
 		"auto", "register", "static", "extern", "typedef"
 	};
 
-	// we should only do this once
-	// TODO: we should probably free these all
-	// but it really isnt necessary as the OS
-	// should clean up most of it anyways
-	if (storage_specifier_set == NULL) {
-		hashset_new(&storage_specifier_set);
-		for (int i = 0; i < array_len(STORAGE_CLASS_SPECIFIER); i++) {
-			hashset_add(storage_specifier_set, STORAGE_CLASS_SPECIFIER[i]);
-		}		
+	for (size_t i = 0; i < array_len(STORAGE_CLASS_SPECIFIER); i++) {
+		if (!strncmp(str, STORAGE_CLASS_SPECIFIER[i], strlen(str))) {
+			return true;
+		}
 	}
 
-	return hashset_contains(storage_specifier_set, str);
+	return false;
 }
 
 bool is_type_specifier(const char* str) {
-	static HashSet* type_specifier_set = NULL;
-
 	static char* TYPE_SPECIFIERS[] = {
 		"void", "char", "short", "int", "long", "float",
 		"double", "signed", "unsigned",
 	};
 
-	// we should only do this once
-	// TODO: we should probably free these all
-	// but it really isnt necessary as the OS
-	// should clean up most of it anyways
-	if (type_specifier_set == NULL) {
-		hashset_new(&type_specifier_set);
-		for (int i = 0; i < array_len(TYPE_SPECIFIERS); i++) {
-			hashset_add(type_specifier_set, TYPE_SPECIFIERS[i]);
-		}		
+	for (size_t i = 0; i < array_len(TYPE_SPECIFIERS); i++) {
+		if (!strncmp(str, TYPE_SPECIFIERS[i], strlen(str))) {
+			return true;
+		}
 	}
 
-	return hashset_contains(type_specifier_set, str);
+	return false;
 }
 
 static bool
@@ -409,8 +382,7 @@ recognized_other(struct lexer* lex) {
 
 struct lexer_info
 tokenize(struct lexer* lex, struct compilation_unit* unit) {
-	Array* tokens;
-	array_new(&tokens);
+	struct array* tokens = new_array(32);
 	lex->unit = unit;
 	lex->row = lex->col = 1;
 
