@@ -1,4 +1,20 @@
-#include <stdio.h>
+const void 
+blah() {
+	if (52) {
+
+	}
+}
+
+const int* foo() {
+	if (1) {
+
+	} else if (2) {
+
+	} else {
+
+	}
+	return 0;	
+}
 
 const int main() {
 	int x = 15;

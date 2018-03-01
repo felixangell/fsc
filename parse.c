@@ -9,6 +9,15 @@
 #include "token.h"
 #include "grammar.h"
 
+static bool
+tok_str_cmp(struct token *t, const char* lexeme) {
+	size_t len = strlen(lexeme);
+	if (len != t->length) {
+		return false;
+	}
+	return !strncmp(t->lexeme, lexeme, len);
+}
+
 static struct token* 
 peek(struct parser* p, int offs) {
 	struct token* t = array_get(p->tokens, p->pos + offs);
@@ -48,14 +57,10 @@ is_type(struct token* t) {
 		"typeof", "union", "unsigned", "void", "volatile",
 	};
 
-	char token_lexeme[t->length];
-	memset(&token_lexeme, 0, t->length);
-	memcpy(&token_lexeme, t->lexeme, t->length);
-
 	#define array_len(x) (sizeof(x) / sizeof(x[0]))
 
 	for (int i = 0; i < array_len(TYPES); i++) {
-		if (!strncmp(token_lexeme, TYPES[i], t->length)) {
+		if (tok_str_cmp(t, TYPES[i])) {
 			return true;
 		}
 	}
@@ -72,6 +77,11 @@ parse_decl_spec(struct parser* p, struct decl_spec* specs) {
 		memcpy(keyword, tok->lexeme, tok->length);
 		keyword[tok->length + 1] = 0;
 
+		if (i >= 32) {
+			fprintf(stderr, "tell the developer to go read about dynamic memory allocation\n");
+			exit(0);
+		}
+
 		struct decl_spec spec;
 		if (is_type_qualifier(keyword)) {
 			printf("%s is a type qualifier!\n", keyword);
@@ -87,36 +97,13 @@ parse_decl_spec(struct parser* p, struct decl_spec* specs) {
 		}
 
 		spec.t = consume(p);
-		*(specs + i) = spec;
+		specs[i] = spec;
 	}
 }
 
 static bool 
 parse_decl(struct parser* p, struct ast_node* node) {
 	assert(node != NULL);
-
-	struct token* tok = next(p);
-
-	// technically this assumption holds well because
-	// keywords are guaranteed to be no longer than
-	// 512 characters!
-	// -
-	// we need to convert the lexeme into a null
-	// terminated string for it to be validly looked up
-	// in the hash set.	
-	char keyword[512] = {0};
-	memcpy(keyword, tok->lexeme, tok->length);
-
-	// FIXME, dynamically allocate this?
-	// we have a limit of 32 specs at most here.
-	struct decl_spec specs[32] = {0};
-	parse_decl_spec(p, specs);
-
-	for (int i = 0; i < array_len(specs); i++) {
-		if (specs[i].t != NULL) {
-			print_tok(specs[i].t);
-		}
-	}
 
 	return false;
 }
@@ -143,44 +130,187 @@ skip_parens(struct parser* p) {
 
 static bool
 is_func_def(struct parser* p) {
-	uint64_t starting_pos = p->pos;
+	uint64_t old_pos = p->pos;
 
-	bool func_def = false;
+	bool result = false;
 	for (;;) {
-		struct token* tok = next(p);
-
-		if (scmp_token(tok, ";")) {
+		struct token* t = next(p);
+		if (tok_str_cmp(t, ";")) {
 			break;
 		}
 
-		if (is_type(tok)) {
+		if (is_type(t)) {
 			consume(p);
 			continue;
 		}
 
-		if (scmp_token(tok, "(")) {
+		if (tok_str_cmp(t, "(")) {
 			skip_parens(p);
 			continue;
 		}
 
-		if (tok->type != T_IDENTIFIER) continue;
-
-		if (scmp_token(tok, "(")) {
-			continue;
-		}
+		consume(p);
 		skip_parens(p);
 
-		func_def = scmp_token(tok, "{") || is_type(next(p));
+		if (tok_str_cmp(next(p), "{") || is_type(next(p))) {
+			result = true;
+		}
 		break;
 	}
 
-	p->pos = starting_pos;
-	return func_def;
+	p->pos = old_pos;
+	return result;
+}
+
+static struct array*
+parse_types(struct parser* p) {
+	struct array* types = new_array(1);
+
+	struct type* last_type = NULL;
+	for (;;) {
+		struct type* type = malloc(sizeof(*type));
+
+		struct token* t = next(p);
+
+		// normal primitive type
+		// e.g int or float, etc.
+		if (is_type(t)) {
+			type->iden = consume(p);
+		} else if (tok_str_cmp(t, "*")) {
+			consume(p);
+			type->ptr = last_type;
+
+			// pop
+			types->size--;
+		} else {
+			break;
+		}
+
+		last_type = type;
+		array_add(types, type);
+	}
+
+	return types;
+}
+
+static struct ast_node*
+parse_assign_expr(struct parser* p) {
+	printf("parse_assign_expr: \n");
+	print_tok(next(p));
+	printf("\n");
+	return NULL;
+}
+
+static struct ast_node*
+parse_comma_expr(struct parser* p) {
+	struct ast_node* node = parse_assign_expr(p);
+	if (!node) {
+		fprintf(stderr, "failed to parse_assign_expr\n");
+		exit(0);
+	}
+	return node;
+}
+
+static struct ast_node*
+parse_expr(struct parser* p) {
+	struct ast_node* expr = parse_comma_expr(p);
+	if (!expr) {
+		fprintf(stderr, "failed to parse_comma_expr\n");
+		exit(0);
+	}
+	return expr;
+}
+
+static bool
+parse_if(struct parser* p, struct stat_node* stat) {
+	if (!tok_str_cmp(next(p), "if")) {
+		return false;
+	}
+	consume(p);
+
+	expect_lexeme(p, "(");
+	struct ast_node* condition = parse_expr(p);
+	expect_lexeme(p, ")");
+}
+
+static bool
+parse_stat(struct parser* p, struct stat_node* stat) {
+	struct token* t = next(p);
+	
+	if (tok_str_cmp(t, "if")) {
+		return parse_if(p, stat);
+	} 
+	else if (tok_str_cmp(t, "else")) {
+		assert(0 && "unimplemented");		
+	} 
+	else if (tok_str_cmp(t, "for")) {
+		assert(0 && "unimplemented");		
+	} 
+	else if (tok_str_cmp(t, "while")) {
+		assert(0 && "unimplemented");		
+	} 
+	else if (tok_str_cmp(t, "return")) {
+		assert(0 && "unimplemented");
+	} 
+	else if (tok_str_cmp(t, "break")) {
+		assert(0 && "unimplemented");		
+	}
+	else if (tok_str_cmp(t, "continue")) {
+		assert(0 && "unimplemented");
+	}
+
+	printf("what is: ");
+	print_tok(t);
+	return false;
 }
 
 static void 
 parse_func_def(struct parser* p, struct ast_node* node) {
-	printf("parsing func def!\n");
+	node->func = malloc(sizeof(*node->func));
+
+	// parse specs.
+	struct decl_spec* specs = malloc(sizeof(*specs));	
+	node->func->spec = specs;
+	parse_decl_spec(p, specs);
+
+	// parse types.
+	struct array* types = parse_types(p);
+
+	struct token* func_name = consume(p);
+	if (func_name->type != T_IDENTIFIER) {
+		fprintf(stderr, "expected identifier for func name, found: \n");
+		print_tok(func_name);
+		putchar('\n');
+	}
+
+	expect_lexeme(p, "(");
+	for (int i = 0; has_next(p) && !tok_str_cmp(next(p), ")"); i++) {
+		if (i > 0) {
+			expect_lexeme(p, ",");
+		}
+
+		struct array* t = parse_types(p);
+		struct token* iden = consume(p);
+	}
+	expect_lexeme(p, ")");
+
+	if (!tok_str_cmp(next(p), "{")) {
+		expect_lexeme(p, ";");
+		return;
+	}
+
+	struct array* stats = new_array(32);
+
+	// parse block!
+	expect_lexeme(p, "{");
+	for (int i = 0; has_next(p) && !tok_str_cmp(next(p), "}"); i++) {
+		struct stat_node* stat = malloc(sizeof(*stat));
+		if (!parse_stat(p, stat)) {
+			assert(0 && "shit!");
+		}
+		array_add(stats, stat);
+	}
+	expect_lexeme(p, "}");
 }
 
 static struct ast_node*
@@ -191,14 +321,16 @@ parse_node(struct parser* p) {
 	if (is_func_def(p)) {
 		parse_func_def(p, node);
 		node->kind = AST_FUNC_DEF;
+		printf("Parsed function: \n");
 		return node;
 	} else {
 		parse_decl(p, node);
-		node->kind = AST_DECL_SPEC;
+		node->kind = AST_DECL;
+		printf("Parsed declaration: \n");
 		return node;
 	}
 
-	printf("what just happened?!\n");
+	printf("stuck on: \n");
 	print_tok(next(p));
 	exit(1);
 	return NULL;
@@ -221,7 +353,6 @@ parse(struct array* tokens) {
 		if (node != NULL) {
 			array_add(ast_nodes, node);
 		}
-		exit(0);
 	}
 
 	return ast_nodes;

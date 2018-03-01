@@ -12,39 +12,58 @@ enum decl_spec_type {
 	DS_FUNCTION_SPEC,
 };
 
+struct decl_spec {
+	struct token* t;
+	enum decl_spec_type type;
+} decl_spec;
+
 enum node_type {
-	/*
-	declaration_spec =
-		storage_class_spec declaration_spec,
-		type_specifier declaration_spec,
-		type_qualifer declaration_spec,
-		function_spec declaration_spec;
-	*/
-	AST_DECL_SPEC,
 	AST_FUNC_DEF,
+	AST_DECL,
+	AST_EXPR,
+};
+
+struct function_node {
+	struct decl_spec* spec;
+};
+
+struct stat_node {
+	int kind;
+};
+
+struct expr_node {
+	int kind;
 };
 
 struct ast_node {
 	int kind;
-	struct decl_spec {
-		struct token* t;
-		enum decl_spec_type type;
-	} decl_spec;
+	struct function_node* func;
+	struct expr_node* expr;
 };
 
 struct type {
 	int kind;
 	union {
+		// *T
 		struct type* ptr;
+		
+		// int, fooba, etc.
+		struct token* iden;
+
+		// struct { T name .. }
 		struct {
 			struct array* fields;
 			int offset;
 			bool is_union; // false => it's a structure
 		} structure;
+
+
 		struct {
 			int offs;
 			int size;
 		} bit_field;
+
+		// 
 		struct {
 			struct type* ret;
 			struct array* params;
